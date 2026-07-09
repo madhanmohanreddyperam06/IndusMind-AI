@@ -6,6 +6,7 @@ from app.middleware.cors import add_cors_middleware
 from app.middleware.logging import log_requests
 from app.api.v1 import health, root, auth
 from app.modules.document.routes import router as document_router
+from app.modules.document_processing.routes import router as document_processing_router
 from app.config.database import init_db
 
 def create_app() -> FastAPI:
@@ -35,6 +36,7 @@ def create_app() -> FastAPI:
     app.include_router(root.router)
     app.include_router(auth.router, prefix="/api/v1/auth", tags=["authentication"])
     app.include_router(document_router, prefix="/api/v1/documents", tags=["documents"])
+    app.include_router(document_processing_router, prefix="/api/v1/document-processing", tags=["document-processing"])
     
     # Startup event
     @app.on_event("startup")

@@ -28,6 +28,7 @@ def init_db():
     """Initialize database connection and create tables."""
     from app.models import user  # Import models to ensure they're registered
     from app.modules.document import models  # Import document models
+    from app.modules.document_processing import models as processing_models  # Import document processing models
     
     # Create tables if they don't exist (preserves existing data)
     Base.metadata.create_all(bind=engine)

@@ -1,6 +1,31 @@
 import { useState, useEffect } from 'react';
 import { documentApiService, Document, DocumentFilters, DocumentUpdate } from '../services/documentApi';
 
+interface ProcessingStatus {
+  document_id: string;
+  processing_stage: string;
+  processing_started_at?: string;
+  processing_completed_at?: string;
+  processing_duration_seconds?: number;
+  parser_used?: string;
+  ocr_used: boolean;
+  ocr_provider?: string;
+  error_message?: string;
+}
+
+interface DocumentStatistics {
+  document_id: string;
+  page_count: number;
+  word_count: number;
+  character_count: number;
+  paragraph_count: number;
+  table_count: number;
+  image_count: number;
+  section_count: number;
+  language: string;
+  estimated_reading_time?: number;
+}
+
 function Documents() {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(false);
@@ -12,6 +37,11 @@ function Documents() {
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showProcessingModal, setShowProcessingModal] = useState(false);
+  const [showStatisticsModal, setShowStatisticsModal] = useState(false);
+  const [processingStatus, setProcessingStatus] = useState<ProcessingStatus | null>(null);
+  const [documentStatistics, setDocumentStatistics] = useState<DocumentStatistics | null>(null);
+  const [processingLoading, setProcessingLoading] = useState(false);
 
   useEffect(() => {
     loadDocuments();
@@ -78,6 +108,49 @@ function Documents() {
       document.body.removeChild(a);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to download document');
+    }
+  };
+
+  const handleProcessDocument = async (documentId: string) => {
+    setProcessingLoading(true);
+    setError('');
+    try {
+      const response = await fetch(`http://localhost:8000/api/v1/document-processing/process/${documentId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ force_reprocess: false }),
+      });
+      if (!response.ok) {
+        throw new Error('Failed to process document');
+      }
+      const status: ProcessingStatus = await response.json();
+      setProcessingStatus(status);
+      setShowProcessingModal(true);
+      await loadDocuments();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to process document');
+    } finally {
+      setProcessingLoading(false);
+    }
+  };
+
+  const handleGetStatistics = async (documentId: string) => {
+    setProcessingLoading(true);
+    setError('');
+    try {
+      const response = await fetch(`http://localhost:8000/api/v1/document-processing/statistics/${documentId}`);
+      if (!response.ok) {
+        throw new Error('Failed to get document statistics');
+      }
+      const stats: DocumentStatistics = await response.json();
+      setDocumentStatistics(stats);
+      setShowStatisticsModal(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to get document statistics');
+    } finally {
+      setProcessingLoading(false);
     }
   };
 
@@ -241,6 +314,20 @@ function Documents() {
                       v{doc.version}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <button
+                        onClick={() => handleProcessDocument(doc.id)}
+                        disabled={processingLoading}
+                        className="text-gray-700 hover:text-gray-900 mr-3 disabled:opacity-50"
+                      >
+                        Process
+                      </button>
+                      <button
+                        onClick={() => handleGetStatistics(doc.id)}
+                        disabled={processingLoading}
+                        className="text-gray-700 hover:text-gray-900 mr-3 disabled:opacity-50"
+                      >
+                        Statistics
+                      </button>
                       <button
                         onClick={() => handleDownload(doc.id, doc.original_filename)}
                         className="text-gray-700 hover:text-gray-900 mr-3"
@@ -419,6 +506,109 @@ function Documents() {
                 className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700"
               >
                 Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Processing Status Modal */}
+      {showProcessingModal && processingStatus && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Processing Status</h2>
+            <div className="space-y-3">
+              <div className="flex justify-between">
+                <span className="text-sm text-gray-600">Stage:</span>
+                <span className="text-sm font-medium text-gray-900">{processingStatus.processing_stage}</span>
+              </div>
+              {processingStatus.parser_used && (
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">Parser:</span>
+                  <span className="text-sm font-medium text-gray-900">{processingStatus.parser_used}</span>
+                </div>
+              )}
+              {processingStatus.ocr_used && (
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">OCR:</span>
+                  <span className="text-sm font-medium text-gray-900">{processingStatus.ocr_provider || 'Yes'}</span>
+                </div>
+              )}
+              {processingStatus.processing_duration_seconds && (
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">Duration:</span>
+                  <span className="text-sm font-medium text-gray-900">{processingStatus.processing_duration_seconds.toFixed(2)}s</span>
+                </div>
+              )}
+              {processingStatus.error_message && (
+                <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-sm text-red-700">{processingStatus.error_message}</p>
+                </div>
+              )}
+            </div>
+            <div className="mt-6 flex justify-end">
+              <button
+                onClick={() => setShowProcessingModal(false)}
+                className="px-4 py-2 bg-gray-900 text-white rounded-lg text-sm hover:bg-gray-800"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Statistics Modal */}
+      {showStatisticsModal && documentStatistics && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Document Statistics</h2>
+            <div className="space-y-3">
+              <div className="flex justify-between">
+                <span className="text-sm text-gray-600">Pages:</span>
+                <span className="text-sm font-medium text-gray-900">{documentStatistics.page_count}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm text-gray-600">Words:</span>
+                <span className="text-sm font-medium text-gray-900">{documentStatistics.word_count}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm text-gray-600">Characters:</span>
+                <span className="text-sm font-medium text-gray-900">{documentStatistics.character_count}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm text-gray-600">Paragraphs:</span>
+                <span className="text-sm font-medium text-gray-900">{documentStatistics.paragraph_count}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm text-gray-600">Tables:</span>
+                <span className="text-sm font-medium text-gray-900">{documentStatistics.table_count}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm text-gray-600">Images:</span>
+                <span className="text-sm font-medium text-gray-900">{documentStatistics.image_count}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm text-gray-600">Sections:</span>
+                <span className="text-sm font-medium text-gray-900">{documentStatistics.section_count}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm text-gray-600">Language:</span>
+                <span className="text-sm font-medium text-gray-900">{documentStatistics.language}</span>
+              </div>
+              {documentStatistics.estimated_reading_time && (
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">Reading Time:</span>
+                  <span className="text-sm font-medium text-gray-900">{documentStatistics.estimated_reading_time} min</span>
+                </div>
+              )}
+            </div>
+            <div className="mt-6 flex justify-end">
+              <button
+                onClick={() => setShowStatisticsModal(false)}
+                className="px-4 py-2 bg-gray-900 text-white rounded-lg text-sm hover:bg-gray-800"
+              >
+                Close
               </button>
             </div>
           </div>
