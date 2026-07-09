@@ -4,6 +4,7 @@
 ![Python](https://img.shields.io/badge/Python-3.14+-3776AB?style=flat-square&logo=python)
 ![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-2.0-336791?style=flat-square&logo=sqlalchemy)
 ![Pydantic](https://img.shields.io/badge/Pydantic-2.13-5C3EE7?style=flat-square&logo=pydantic)
+![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?style=flat-square&logo=mysql)
 ![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
 
 FastAPI backend for the Industrial Knowledge Intelligence Platform.
@@ -17,7 +18,7 @@ FastAPI backend for the Industrial Knowledge Intelligence Platform.
 - **ORM**: SQLAlchemy 2.0
 
 ### Database
-- **Primary Database**: PostgreSQL
+- **Primary Database**: MySQL 8.0
 - **Graph Database**: Neo4j (planned)
 - **Vector Database**: Qdrant (planned)
 

@@ -4,7 +4,7 @@
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?style=flat-square&logo=typescript)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.136.0-009688?style=flat-square&logo=fastapi)
 ![Python](https://img.shields.io/badge/Python-3.14+-3776AB?style=flat-square&logo=python)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=flat-square&logo=postgresql)
+![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?style=flat-square&logo=mysql)
 ![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
 
 An enterprise-grade AI-powered platform for industrial document intelligence, knowledge graph construction, and intelligent engineering assistance.
@@ -41,7 +41,7 @@ IndusMind AI is designed to ingest industrial documents (PDFs, manuals, maintena
 - **Image Processing**: Pillow 12.1.1
 
 ### Databases
-- **PostgreSQL**: Relational data storage
+- **MySQL**: Relational data storage
 - **Neo4j**: Knowledge graph storage (planned)
 - **Qdrant**: Vector embeddings and similarity search (planned)
 
