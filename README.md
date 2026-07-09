@@ -1,5 +1,12 @@
 # IndusMind AI - Industrial Knowledge Intelligence Platform
 
+![React](https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?style=flat-square&logo=typescript)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.136.0-009688?style=flat-square&logo=fastapi)
+![Python](https://img.shields.io/badge/Python-3.14+-3776AB?style=flat-square&logo=python)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=flat-square&logo=postgresql)
+![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
+
 An enterprise-grade AI-powered platform for industrial document intelligence, knowledge graph construction, and intelligent engineering assistance.
 
 ## Overview
@@ -19,20 +26,28 @@ IndusMind AI is designed to ingest industrial documents (PDFs, manuals, maintena
 - **Graph Visualization**: React Flow (future)
 
 ### Backend
-- **Framework**: FastAPI
-- **Validation**: Pydantic v2
-- **ORM**: SQLAlchemy
+- **Framework**: FastAPI 0.136.0
+- **Server**: Uvicorn 0.45.0
+- **Validation**: Pydantic v2.13.3
+- **ORM**: SQLAlchemy 2.0
 - **Migrations**: Alembic
-- **Server**: Uvicorn
-- **Security**: JWT, bcrypt
+- **Security**: JWT, bcrypt, cryptography
+
+### Document Processing
+- **PDF Parsing**: pdfplumber 0.11.9
+- **DOCX Parsing**: python-docx 1.2.0
+- **Excel/CSV**: pandas 3.0.3, openpyxl 3.1.5
+- **OCR**: PaddleOCR 3.7.0 (primary), pytesseract 0.3.13 (fallback)
+- **Image Processing**: Pillow 12.1.1
 
 ### Databases
 - **PostgreSQL**: Relational data storage
-- **Neo4j**: Knowledge graph storage
-- **Qdrant**: Vector embeddings and similarity search
+- **Neo4j**: Knowledge graph storage (planned)
+- **Qdrant**: Vector embeddings and similarity search (planned)
 
 ### Storage
-- **MinIO**: Object storage for documents and files
+- **MinIO**: Object storage for documents and files (planned)
+- **Local Storage**: Current file storage implementation
 
 ### Containerization
 - **Docker**: Containerization
@@ -45,7 +60,7 @@ industrial-knowledge-intelligence/
 ├── frontend/              # React frontend application
 │   ├── src/
 │   │   ├── components/    # Reusable components
-│   │   ├── pages/         # Page components
+│   │   ├── pages/         # Page components (Dashboard, Documents, etc.)
 │   │   ├── layouts/       # Layout components
 │   │   ├── hooks/         # Custom React hooks
 │   │   ├── services/      # API services
@@ -57,15 +72,31 @@ industrial-knowledge-intelligence/
 │   │   └── utils/         # Utility functions
 │   ├── package.json
 │   └── vite.config.ts
-├── backend/               # FastAPI backend应用
+├── backend/               # FastAPI backend application
 │   ├── app/
 │   │   ├── api/           # API endpoints
+│   │   │   └── v1/        # API version 1
+│   │   │       ├── auth.py
+│   │   │       └── documents.py
 │   │   ├── config/        # Configuration settings
-│   │   ├── core/          # Core functionality
+│   │   ├── core/          # Core functionality (security, logging, deps)
 │   │   ├── database/      # Database configuration
 │   │   ├── models/        # SQLAlchemy models
-│   │   ├── schemas/       # Pydantic schemas
-│   │   ├── services/      # Business logic
+│   │   ├── modules/       # Feature modules
+│   │   │   ├── auth/      # Authentication module
+│   │   │   ├── document/  # Document management module
+│   │   │   └── document_processing/  # Document Intelligence Pipeline
+│   │   │       ├── processors/       # File parsers
+│   │   │       ├── ocr/              # OCR engine
+│   │   │       ├── layout/           # Layout analyzer
+│   │   │       ├── extractors/       # Content extractors
+│   │   │       ├── normalizer/       # Document normalizer
+│   │   │       ├── queue/            # Processing queue
+│   │   │       ├── models.py         # Database models
+│   │   │       ├── schemas.py        # Pydantic schemas
+│   │   │       ├── service.py        # Business logic
+│   │   │       ├── repository.py     # Data access layer
+│   │   │       └── routes.py         # API routes
 │   │   ├── repositories/  # Data access layer
 │   │   ├── middleware/    # Custom middleware
 │   │   ├── utils/         # Utility functions
@@ -195,6 +226,13 @@ The application will be available at http://localhost:3000
 - `DELETE /api/v1/documents/{id}` - Soft delete document
 - `GET /api/v1/documents/search/query` - Search documents by filename
 
+#### Document Processing
+- `POST /api/v1/document-processing/process/{document_id}` - Process a document
+- `POST /api/v1/document-processing/process-all` - Process all uploaded documents
+- `GET /api/v1/document-processing/status/{document_id}` - Get processing status
+- `GET /api/v1/document-processing/result/{document_id}` - Get processed document
+- `GET /api/v1/document-processing/statistics/{document_id}` - Get document statistics
+
 #### System
 - `GET /` - Root endpoint with service information
 - `GET /health` - Health check endpoint
@@ -213,37 +251,44 @@ The application will be available at http://localhost:3000
 
 ## Future Roadmap
 
-This project is structured to support the following features:
-
-### Phase 1: Document Processing
+### Phase 1: Document Processing ✅ COMPLETED
 - Document upload and ingestion
-- OCR for scanned documents
-- PDF parsing and text extraction
+- OCR for scanned documents (PaddleOCR + Tesseract fallback)
+- PDF parsing and text extraction (pdfplumber)
+- DOCX parsing (python-docx)
+- Excel/CSV parsing (pandas, openpyxl)
+- Image parsing (Pillow)
 - Document classification and tagging
 - Metadata extraction
+- Layout analysis
+- Table extraction
+- Image extraction
+- Document normalization to canonical format
+- Async processing queue and worker
+- RESTful API for document processing
 
-### Phase 2: Knowledge Graph
+### Phase 2: Knowledge Graph 🚧 IN PROGRESS
 - Entity extraction from documents
 - Relationship identification
 - Knowledge graph construction
 - Graph visualization with React Flow
 - Graph querying and exploration
 
-### Phase 3: Vector Search
+### Phase 3: Vector Search 🚧 PLANNED
 - Document embedding generation
 - Vector similarity search
 - Hybrid search (keyword + semantic)
 - RAG (Retrieval-Augmented Generation)
 - Context-aware responses
 
-### Phase 4: AI Assistant
+### Phase 4: AI Assistant 🚧 PLANNED
 - Natural language query interface
 - Document Q&A
 - Intelligent recommendations
 - Automated report generation
 - Predictive maintenance insights
 
-### Phase 5: Advanced Features
+### Phase 5: Advanced Features 🚧 PLANNED
 - Real-time document processing
 - Multi-modal document analysis
 - Collaborative annotation
@@ -272,9 +317,59 @@ This project is structured to support the following features:
 - Validate all user inputs
 - Use HTTPS in production
 
+## Architecture
+
+The application follows Clean Architecture principles with:
+
+### Backend Architecture
+- **Modular design**: Each feature is a separate module
+- **Repository pattern**: Data access abstraction
+- **Strategy pattern**: Pluggable parsers and OCR engines
+- **Factory pattern**: Dynamic parser selection
+- **Dependency injection**: FastAPI's dependency system
+- **SOLID principles**: Single responsibility, open/closed, Liskov substitution, interface segregation, dependency inversion
+
+### Frontend Architecture
+- **Component-based architecture**: Reusable React components
+- **Type safety**: TypeScript for type checking
+- **State management**: TanStack Query for server state
+- **Routing**: React Router for navigation
+- **Styling**: Tailwind CSS for utility-first styling
+
+## Document Intelligence Pipeline
+
+The document processing module transforms uploaded documents into structured, normalized Document Objects ready for:
+
+- Entity Extraction Engine
+- Relationship Extraction Engine
+- Knowledge Graph Builder
+- Embedding Pipeline
+- RAG Pipeline
+- AI Agents
+
+### Supported File Types
+- PDF (.pdf)
+- Word Documents (.docx, .doc)
+- Text Files (.txt)
+- CSV Files (.csv)
+- Excel Files (.xlsx, .xls)
+- Images (.png, .jpg, .jpeg, .tiff, .bmp)
+
+### Processing Stages
+1. File Type Detection
+2. Parser Selection
+3. Document Parsing
+4. OCR (only when needed)
+5. Layout Analysis
+6. Table Extraction
+7. Image Extraction
+8. Metadata Enrichment
+9. Document Normalization
+10. Persist Results
+
 ## License
 
-This project is created for hackathon purposes.
+MIT License
 
 ## Contact
 
