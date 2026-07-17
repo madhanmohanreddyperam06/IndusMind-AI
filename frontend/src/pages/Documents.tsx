@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { documentApiService, Document, DocumentFilters, DocumentUpdate } from '../services/documentApi';
 
 interface ProcessingStatus {
@@ -27,6 +28,7 @@ interface DocumentStatistics {
 }
 
 function Documents() {
+  const navigate = useNavigate();
   const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -314,6 +316,12 @@ function Documents() {
                       v{doc.version}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <button
+                        onClick={() => navigate(`/documents/${doc.id}`)}
+                        className="text-gray-700 hover:text-gray-900 mr-3"
+                      >
+                        Details
+                      </button>
                       <button
                         onClick={() => handleProcessDocument(doc.id)}
                         disabled={processingLoading}

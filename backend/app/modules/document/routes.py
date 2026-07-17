@@ -155,7 +155,7 @@ def list_documents(
     status: Optional[ProcessingStatus] = Query(None),
     uploaded_by: Optional[str] = Query(None),
     sort_by: str = Query("uploaded_at"),
-    sort_order: str = Query("desc", regex="^(asc|desc)$"),
+    sort_order: str = Query("desc", pattern="^(asc|desc)$"),
     service: DocumentService = Depends(get_document_service)
 ):
     """List documents with pagination, filtering, and sorting.

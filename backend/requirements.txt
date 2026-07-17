@@ -10,11 +10,15 @@ alembic==1.12.1
 pymysql==1.1.0
 cryptography==41.0.7
 
-# Neo4j (commented out - requires Neo4j installed locally)
-# neo4j==5.14.0
+# Neo4j
+neo4j==5.14.0
 
-# Qdrant (commented out - requires Qdrant installed locally)
-# qdrant-client==1.7.0
+# Qdrant
+qdrant-client==1.7.0
+
+# Embedding Model
+sentence-transformers==2.2.2
+torch==2.1.0
 
 # Security
 python-jose[cryptography]==3.3.0
@@ -36,3 +40,10 @@ openpyxl==3.1.2
 Pillow==10.1.0
 paddleocr==2.7.0.3
 pytesseract==0.3.10
+
+# NLP for Knowledge Extraction
+spacy==3.7.2
+en-core-web-sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.7.1/en_core_web_sm-3.7.1-py3-none-any.whl
+
+# RAG Engine - LLM Providers
+google-generativeai==0.3.2

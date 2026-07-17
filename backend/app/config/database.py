@@ -29,6 +29,7 @@ def init_db():
     from app.models import user  # Import models to ensure they're registered
     from app.modules.document import models  # Import document models
     from app.modules.document_processing import models as processing_models  # Import document processing models
+    from app.modules.knowledge_extraction import models as knowledge_models  # Import knowledge extraction models
     
     # Create tables if they don't exist (preserves existing data)
     Base.metadata.create_all(bind=engine)
