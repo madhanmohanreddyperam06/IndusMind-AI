@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { ProcessingTimeline } from '../components/documents/ProcessingTimeline';
+import { documentService } from '../services';
+import type { ProcessingTimeline as ProcessingTimelineType } from '../types/documents';
 
 interface Entity {
   entity_id: string;
@@ -43,10 +46,11 @@ function DocumentDetails() {
   const { documentId } = useParams<{ documentId: string }>();
   const navigate = useNavigate();
   
-  const [activeTab, setActiveTab] = useState<'entities' | 'relationships' | 'statistics'>('entities');
+  const [activeTab, setActiveTab] = useState<'entities' | 'relationships' | 'statistics' | 'timeline'>('entities');
   const [entities, setEntities] = useState<Entity[]>([]);
   const [relationships, setRelationships] = useState<Relationship[]>([]);
   const [statistics, setStatistics] = useState<KnowledgeStatistics | null>(null);
+  const [processingTimeline, setProcessingTimeline] = useState<ProcessingTimelineType | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [extracting, setExtracting] = useState(false);
@@ -80,6 +84,16 @@ function DocumentDetails() {
       if (statsResponse.ok) {
         const statsData = await statsResponse.json();
         setStatistics(statsData);
+      }
+
+      // Load processing timeline
+      if (documentId) {
+        try {
+          const timeline = await documentService.getProcessingTimeline(parseInt(documentId));
+          setProcessingTimeline(timeline);
+        } catch (err) {
+          console.error('Failed to load processing timeline:', err);
+        }
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load extraction data');
@@ -158,22 +172,22 @@ function DocumentDetails() {
     <div className="min-h-screen bg-white">
       {/* Header */}
       <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex justify-between items-center">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-6">
+          <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-3">
             <div>
               <button
                 onClick={() => navigate('/documents')}
-                className="text-gray-600 hover:text-gray-900 mb-2 text-sm"
+                className="text-gray-600 hover:text-gray-900 mb-1 md:mb-2 text-xs md:text-sm"
               >
                 ← Back to Documents
               </button>
-              <h1 className="text-3xl font-semibold text-gray-900 tracking-tight">Document Details</h1>
-              <p className="mt-1 text-gray-600">Knowledge extraction for document {documentId}</p>
+              <h1 className="text-xl md:text-3xl font-semibold text-gray-900 tracking-tight">Document Details</h1>
+              <p className="mt-0.5 md:mt-1 text-xs md:text-sm text-gray-600">Knowledge extraction for document {documentId}</p>
             </div>
             <button
               onClick={handleExtractKnowledge}
               disabled={extracting}
-              className="bg-gray-900 text-white px-6 py-2.5 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors disabled:opacity-50"
+              className="bg-gray-900 text-white px-4 md:px-6 py-2 md:py-2.5 rounded-lg text-xs md:text-sm font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 self-start md:self-auto"
             >
               {extracting ? 'Extracting...' : 'Extract Knowledge'}
             </button>
@@ -183,24 +197,24 @@ function DocumentDetails() {
 
       {/* Error Message */}
       {error && (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 md:py-4">
+          <div className="bg-red-50 border border-red-200 text-red-700 px-3 md:px-4 py-2 md:py-3 rounded-lg text-xs md:text-sm">
             {error}
           </div>
         </div>
       )}
 
       {/* Tabs */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="border-b border-gray-200">
-          <nav className="-mb-px flex space-x-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-6">
+        <div className="border-b border-gray-200 overflow-x-auto">
+          <nav className="-mb-px flex space-x-4 md:space-x-8 min-w-max">
             <button
               onClick={() => setActiveTab('entities')}
               className={`${
                 activeTab === 'entities'
                   ? 'border-gray-900 text-gray-900'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+              } whitespace-nowrap py-3 md:py-4 px-1 border-b-2 font-medium text-xs md:text-sm`}
             >
               Entities {entities.length > 0 && `(${entities.length})`}
             </button>
@@ -210,7 +224,7 @@ function DocumentDetails() {
                 activeTab === 'relationships'
                   ? 'border-gray-900 text-gray-900'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+              } whitespace-nowrap py-3 md:py-4 px-1 border-b-2 font-medium text-xs md:text-sm`}
             >
               Relationships {relationships.length > 0 && `(${relationships.length})`}
             </button>
@@ -220,16 +234,26 @@ function DocumentDetails() {
                 activeTab === 'statistics'
                   ? 'border-gray-900 text-gray-900'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+              } whitespace-nowrap py-3 md:py-4 px-1 border-b-2 font-medium text-xs md:text-sm`}
             >
               Statistics
+            </button>
+            <button
+              onClick={() => setActiveTab('timeline')}
+              className={`${
+                activeTab === 'timeline'
+                  ? 'border-gray-900 text-gray-900'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              } whitespace-nowrap py-3 md:py-4 px-1 border-b-2 font-medium text-xs md:text-sm`}
+            >
+              Processing Timeline
             </button>
           </nav>
         </div>
       </div>
 
       {/* Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-6">
         {loading ? (
           <div className="text-center text-gray-600 py-12">Loading...</div>
         ) : (
@@ -238,51 +262,53 @@ function DocumentDetails() {
             {activeTab === 'entities' && (
               <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
                 {entities.length === 0 ? (
-                  <div className="p-8 text-center text-gray-600">
+                  <div className="p-6 md:p-8 text-center text-xs md:text-sm text-gray-600">
                     No entities found. Click "Extract Knowledge" to extract entities from this document.
                   </div>
                 ) : (
-                  <table className="min-w-full">
-                    <thead className="bg-gray-50 border-b border-gray-200">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Name</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Type</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Confidence</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Page</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Context</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200">
-                      {entities.map((entity) => (
-                        <tr key={entity.entity_id} className="hover:bg-gray-50">
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm font-medium text-gray-900">{entity.name}</div>
-                            <div className="text-xs text-gray-500">{entity.normalized_name}</div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getEntityTypeColor(entity.entity_type)}`}>
-                              {entity.entity_type.replace('_', ' ')}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="w-full bg-gray-200 rounded-full h-2">
-                              <div
-                                className="bg-gray-900 h-2 rounded-full"
-                                style={{ width: `${entity.confidence_score * 100}%` }}
-                              ></div>
-                            </div>
-                            <div className="text-xs text-gray-500 mt-1">{(entity.confidence_score * 100).toFixed(0)}%</div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                            {entity.page_number || '-'}
-                          </td>
-                          <td className="px-6 py-4 text-sm text-gray-600 max-w-md truncate">
-                            {entity.context || '-'}
-                          </td>
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full">
+                      <thead className="bg-gray-50 border-b border-gray-200">
+                        <tr>
+                          <th className="px-3 md:px-6 py-2 md:py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Name</th>
+                          <th className="px-3 md:px-6 py-2 md:py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Type</th>
+                          <th className="px-3 md:px-6 py-2 md:py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider hidden sm:table-cell">Confidence</th>
+                          <th className="px-3 md:px-6 py-2 md:py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider hidden md:table-cell">Page</th>
+                          <th className="px-3 md:px-6 py-2 md:py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider hidden lg:table-cell">Context</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200">
+                        {entities.map((entity) => (
+                          <tr key={entity.entity_id} className="hover:bg-gray-50">
+                            <td className="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap">
+                              <div className="text-xs md:text-sm font-medium text-gray-900">{entity.name}</div>
+                              <div className="text-xs text-gray-500 hidden md:block">{entity.normalized_name}</div>
+                            </td>
+                            <td className="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap">
+                              <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getEntityTypeColor(entity.entity_type)}`}>
+                                {entity.entity_type.replace('_', ' ')}
+                              </span>
+                            </td>
+                            <td className="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap hidden sm:table-cell">
+                              <div className="w-full bg-gray-200 rounded-full h-2">
+                                <div
+                                  className="bg-gray-900 h-2 rounded-full"
+                                  style={{ width: `${entity.confidence_score * 100}%` }}
+                                ></div>
+                              </div>
+                              <div className="text-xs text-gray-500 mt-1">{(entity.confidence_score * 100).toFixed(0)}%</div>
+                            </td>
+                            <td className="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap text-xs md:text-sm text-gray-600 hidden md:table-cell">
+                              {entity.page_number || '-'}
+                            </td>
+                            <td className="px-3 md:px-6 py-3 md:py-4 text-xs md:text-sm text-gray-600 max-w-md truncate hidden lg:table-cell">
+                              {entity.context || '-'}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 )}
               </div>
             )}
@@ -291,91 +317,93 @@ function DocumentDetails() {
             {activeTab === 'relationships' && (
               <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
                 {relationships.length === 0 ? (
-                  <div className="p-8 text-center text-gray-600">
+                  <div className="p-6 md:p-8 text-center text-xs md:text-sm text-gray-600">
                     No relationships found. Click "Extract Knowledge" to extract relationships from this document.
                   </div>
                 ) : (
-                  <table className="min-w-full">
-                    <thead className="bg-gray-50 border-b border-gray-200">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Source Entity</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Relationship</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Target Entity</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Confidence</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Evidence</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200">
-                      {relationships.map((rel) => (
-                        <tr key={rel.relationship_id} className="hover:bg-gray-50">
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {rel.source_entity_id}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getRelationshipTypeColor(rel.relationship_type)}`}>
-                              {rel.relationship_type.replace('_', ' ')}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {rel.target_entity_id}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="w-full bg-gray-200 rounded-full h-2">
-                              <div
-                                className="bg-gray-900 h-2 rounded-full"
-                                style={{ width: `${rel.confidence_score * 100}%` }}
-                              ></div>
-                            </div>
-                            <div className="text-xs text-gray-500 mt-1">{(rel.confidence_score * 100).toFixed(0)}%</div>
-                          </td>
-                          <td className="px-6 py-4 text-sm text-gray-600 max-w-md truncate">
-                            {rel.evidence_text || '-'}
-                          </td>
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full">
+                      <thead className="bg-gray-50 border-b border-gray-200">
+                        <tr>
+                          <th className="px-3 md:px-6 py-2 md:py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Source Entity</th>
+                          <th className="px-3 md:px-6 py-2 md:py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Relationship</th>
+                          <th className="px-3 md:px-6 py-2 md:py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider hidden sm:table-cell">Target Entity</th>
+                          <th className="px-3 md:px-6 py-2 md:py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider hidden md:table-cell">Confidence</th>
+                          <th className="px-3 md:px-6 py-2 md:py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider hidden lg:table-cell">Evidence</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200">
+                        {relationships.map((rel) => (
+                          <tr key={rel.relationship_id} className="hover:bg-gray-50">
+                            <td className="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap text-xs md:text-sm text-gray-900">
+                              {rel.source_entity_id}
+                            </td>
+                            <td className="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap">
+                              <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getRelationshipTypeColor(rel.relationship_type)}`}>
+                                {rel.relationship_type.replace('_', ' ')}
+                              </span>
+                            </td>
+                            <td className="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap text-xs md:text-sm text-gray-900 hidden sm:table-cell">
+                              {rel.target_entity_id}
+                            </td>
+                            <td className="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap hidden md:table-cell">
+                              <div className="w-full bg-gray-200 rounded-full h-2">
+                                <div
+                                  className="bg-gray-900 h-2 rounded-full"
+                                  style={{ width: `${rel.confidence_score * 100}%` }}
+                                ></div>
+                              </div>
+                              <div className="text-xs text-gray-500 mt-1">{(rel.confidence_score * 100).toFixed(0)}%</div>
+                            </td>
+                            <td className="px-3 md:px-6 py-3 md:py-4 text-xs md:text-sm text-gray-600 max-w-md truncate hidden lg:table-cell">
+                              {rel.evidence_text || '-'}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 )}
               </div>
             )}
 
             {/* Statistics Tab */}
             {activeTab === 'statistics' && (
-              <div className="bg-white rounded-lg border border-gray-200 p-6">
+              <div className="bg-white rounded-lg border border-gray-200 p-4 md:p-6">
                 {!statistics ? (
-                  <div className="text-center text-gray-600">
+                  <div className="text-center text-xs md:text-sm text-gray-600">
                     No statistics available. Extract knowledge to see statistics.
                   </div>
                 ) : (
-                  <div className="space-y-6">
+                  <div className="space-y-4 md:space-y-6">
                     {/* Overview */}
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                      <div className="bg-gray-50 rounded-lg p-4">
-                        <div className="text-sm text-gray-600">Total Entities</div>
-                        <div className="text-2xl font-semibold text-gray-900">{statistics.entity_count}</div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+                      <div className="bg-gray-50 rounded-lg p-3 md:p-4">
+                        <div className="text-xs md:text-sm text-gray-600">Total Entities</div>
+                        <div className="text-lg md:text-2xl font-semibold text-gray-900">{statistics.entity_count}</div>
                       </div>
-                      <div className="bg-gray-50 rounded-lg p-4">
-                        <div className="text-sm text-gray-600">Unique Entities</div>
-                        <div className="text-2xl font-semibold text-gray-900">{statistics.unique_entity_count}</div>
+                      <div className="bg-gray-50 rounded-lg p-3 md:p-4">
+                        <div className="text-xs md:text-sm text-gray-600">Unique Entities</div>
+                        <div className="text-lg md:text-2xl font-semibold text-gray-900">{statistics.unique_entity_count}</div>
                       </div>
-                      <div className="bg-gray-50 rounded-lg p-4">
-                        <div className="text-sm text-gray-600">Relationships</div>
-                        <div className="text-2xl font-semibold text-gray-900">{statistics.relationship_count}</div>
+                      <div className="bg-gray-50 rounded-lg p-3 md:p-4">
+                        <div className="text-xs md:text-sm text-gray-600">Relationships</div>
+                        <div className="text-lg md:text-2xl font-semibold text-gray-900">{statistics.relationship_count}</div>
                       </div>
-                      <div className="bg-gray-50 rounded-lg p-4">
-                        <div className="text-sm text-gray-600">Duplicates</div>
-                        <div className="text-2xl font-semibold text-gray-900">{statistics.duplicate_count}</div>
+                      <div className="bg-gray-50 rounded-lg p-3 md:p-4">
+                        <div className="text-xs md:text-sm text-gray-600">Duplicates</div>
+                        <div className="text-lg md:text-2xl font-semibold text-gray-900">{statistics.duplicate_count}</div>
                       </div>
                     </div>
 
                     {/* Entity Types */}
                     <div>
-                      <h3 className="text-lg font-medium text-gray-900 mb-3">Entity Types</h3>
+                      <h3 className="text-base md:text-lg font-medium text-gray-900 mb-2 md:mb-3">Entity Types</h3>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                         {Object.entries(statistics.entity_types).map(([type, count]) => (
-                          <div key={type} className="flex justify-between bg-gray-50 rounded px-3 py-2">
-                            <span className="text-sm text-gray-600">{type.replace('_', ' ')}</span>
-                            <span className="text-sm font-medium text-gray-900">{count}</span>
+                          <div key={type} className="flex justify-between bg-gray-50 rounded px-2 md:px-3 py-1.5 md:py-2">
+                            <span className="text-xs md:text-sm text-gray-600">{type.replace('_', ' ')}</span>
+                            <span className="text-xs md:text-sm font-medium text-gray-900">{count}</span>
                           </div>
                         ))}
                       </div>
@@ -383,12 +411,12 @@ function DocumentDetails() {
 
                     {/* Relationship Types */}
                     <div>
-                      <h3 className="text-lg font-medium text-gray-900 mb-3">Relationship Types</h3>
+                      <h3 className="text-base md:text-lg font-medium text-gray-900 mb-2 md:mb-3">Relationship Types</h3>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                         {Object.entries(statistics.relationship_types).map(([type, count]) => (
-                          <div key={type} className="flex justify-between bg-gray-50 rounded px-3 py-2">
-                            <span className="text-sm text-gray-600">{type.replace('_', ' ')}</span>
-                            <span className="text-sm font-medium text-gray-900">{count}</span>
+                          <div key={type} className="flex justify-between bg-gray-50 rounded px-2 md:px-3 py-1.5 md:py-2">
+                            <span className="text-xs md:text-sm text-gray-600">{type.replace('_', ' ')}</span>
+                            <span className="text-xs md:text-sm font-medium text-gray-900">{count}</span>
                           </div>
                         ))}
                       </div>
@@ -396,39 +424,39 @@ function DocumentDetails() {
 
                     {/* Confidence Distribution */}
                     <div>
-                      <h3 className="text-lg font-medium text-gray-900 mb-3">Confidence Distribution</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="bg-gray-50 rounded-lg p-4">
-                          <h4 className="text-sm font-medium text-gray-900 mb-2">Entities</h4>
-                          <div className="space-y-2">
+                      <h3 className="text-base md:text-lg font-medium text-gray-900 mb-2 md:mb-3">Confidence Distribution</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+                        <div className="bg-gray-50 rounded-lg p-3 md:p-4">
+                          <h4 className="text-xs md:text-sm font-medium text-gray-900 mb-2">Entities</h4>
+                          <div className="space-y-1.5 md:space-y-2">
                             <div className="flex justify-between">
-                              <span className="text-sm text-gray-600">High (≥80%)</span>
-                              <span className="text-sm font-medium text-gray-900">{statistics.confidence_distribution.entities.high}</span>
+                              <span className="text-xs md:text-sm text-gray-600">High (≥80%)</span>
+                              <span className="text-xs md:text-sm font-medium text-gray-900">{statistics.confidence_distribution.entities.high}</span>
                             </div>
                             <div className="flex justify-between">
-                              <span className="text-sm text-gray-600">Medium (50-79%)</span>
-                              <span className="text-sm font-medium text-gray-900">{statistics.confidence_distribution.entities.medium}</span>
+                              <span className="text-xs md:text-sm text-gray-600">Medium (50-79%)</span>
+                              <span className="text-xs md:text-sm font-medium text-gray-900">{statistics.confidence_distribution.entities.medium}</span>
                             </div>
                             <div className="flex justify-between">
-                              <span className="text-sm text-gray-600">Low (&lt;50%)</span>
-                              <span className="text-sm font-medium text-gray-900">{statistics.confidence_distribution.entities.low}</span>
+                              <span className="text-xs md:text-sm text-gray-600">Low (&lt;50%)</span>
+                              <span className="text-xs md:text-sm font-medium text-gray-900">{statistics.confidence_distribution.entities.low}</span>
                             </div>
                           </div>
                         </div>
-                        <div className="bg-gray-50 rounded-lg p-4">
-                          <h4 className="text-sm font-medium text-gray-900 mb-2">Relationships</h4>
-                          <div className="space-y-2">
+                        <div className="bg-gray-50 rounded-lg p-3 md:p-4">
+                          <h4 className="text-xs md:text-sm font-medium text-gray-900 mb-2">Relationships</h4>
+                          <div className="space-y-1.5 md:space-y-2">
                             <div className="flex justify-between">
-                              <span className="text-sm text-gray-600">High (≥80%)</span>
-                              <span className="text-sm font-medium text-gray-900">{statistics.confidence_distribution.relationships.high}</span>
+                              <span className="text-xs md:text-sm text-gray-600">High (≥80%)</span>
+                              <span className="text-xs md:text-sm font-medium text-gray-900">{statistics.confidence_distribution.relationships.high}</span>
                             </div>
                             <div className="flex justify-between">
-                              <span className="text-sm text-gray-600">Medium (50-79%)</span>
-                              <span className="text-sm font-medium text-gray-900">{statistics.confidence_distribution.relationships.medium}</span>
+                              <span className="text-xs md:text-sm text-gray-600">Medium (50-79%)</span>
+                              <span className="text-xs md:text-sm font-medium text-gray-900">{statistics.confidence_distribution.relationships.medium}</span>
                             </div>
                             <div className="flex justify-between">
-                              <span className="text-sm text-gray-600">Low (&lt;50%)</span>
-                              <span className="text-sm font-medium text-gray-900">{statistics.confidence_distribution.relationships.low}</span>
+                              <span className="text-xs md:text-sm text-gray-600">Low (&lt;50%)</span>
+                              <span className="text-xs md:text-sm font-medium text-gray-900">{statistics.confidence_distribution.relationships.low}</span>
                             </div>
                           </div>
                         </div>
@@ -436,13 +464,26 @@ function DocumentDetails() {
                     </div>
 
                     {/* Extraction Time */}
-                    <div className="bg-gray-50 rounded-lg p-4">
+                    <div className="bg-gray-50 rounded-lg p-3 md:p-4">
                       <div className="flex justify-between">
-                        <span className="text-sm text-gray-600">Extraction Time</span>
-                        <span className="text-sm font-medium text-gray-900">{statistics.extraction_time_seconds.toFixed(2)}s</span>
+                        <span className="text-xs md:text-sm text-gray-600">Extraction Time</span>
+                        <span className="text-xs md:text-sm font-medium text-gray-900">{statistics.extraction_time_seconds.toFixed(2)}s</span>
                       </div>
                     </div>
                   </div>
+                )}
+              </div>
+            )}
+
+            {/* Processing Timeline Tab */}
+            {activeTab === 'timeline' && (
+              <div className="bg-white rounded-lg border border-gray-200 p-4 md:p-6">
+                {!processingTimeline ? (
+                  <div className="text-center text-xs md:text-sm text-gray-600">
+                    No processing timeline available. Process the document to see the timeline.
+                  </div>
+                ) : (
+                  <ProcessingTimeline timeline={processingTimeline} />
                 )}
               </div>
             )}

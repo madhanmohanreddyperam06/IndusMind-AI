@@ -1,8 +1,15 @@
+import { ChatInterface } from '../components/chat/ChatInterface';
+
 function AICopilot() {
   return (
-    <div>
-      <h1 className="text-3xl font-bold text-gray-900">AI Copilot</h1>
-      <p className="mt-2 text-gray-600">AI-powered engineering assistant</p>
+    <div className="h-full flex flex-col">
+      <div className="mb-3 md:mb-4">
+        <h1 className="text-xl md:text-2xl font-bold text-slate-900">AI Copilot</h1>
+        <p className="text-xs md:text-sm text-slate-500">AI-powered engineering assistant</p>
+      </div>
+      <div className="flex-1 bg-white rounded-lg border border-slate-200 overflow-hidden">
+        <ChatInterface />
+      </div>
     </div>
   )
 }

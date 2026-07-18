@@ -19,6 +19,11 @@ def init_neo4j():
     """
     global driver
     
+    # Check if Neo4j is enabled
+    if not settings.neo4j_enabled:
+        logger.info("Neo4j integration is disabled in settings")
+        return
+    
     try:
         driver = GraphDatabase.driver(
             settings.neo4j_uri,

@@ -14,19 +14,6 @@ interface ProcessingStatus {
   error_message?: string;
 }
 
-interface DocumentStatistics {
-  document_id: string;
-  page_count: number;
-  word_count: number;
-  character_count: number;
-  paragraph_count: number;
-  table_count: number;
-  image_count: number;
-  section_count: number;
-  language: string;
-  estimated_reading_time?: number;
-}
-
 function Documents() {
   const navigate = useNavigate();
   const [documents, setDocuments] = useState<Document[]>([]);
@@ -40,9 +27,7 @@ function Documents() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showProcessingModal, setShowProcessingModal] = useState(false);
-  const [showStatisticsModal, setShowStatisticsModal] = useState(false);
   const [processingStatus, setProcessingStatus] = useState<ProcessingStatus | null>(null);
-  const [documentStatistics, setDocumentStatistics] = useState<DocumentStatistics | null>(null);
   const [processingLoading, setProcessingLoading] = useState(false);
 
   useEffect(() => {
@@ -138,24 +123,6 @@ function Documents() {
     }
   };
 
-  const handleGetStatistics = async (documentId: string) => {
-    setProcessingLoading(true);
-    setError('');
-    try {
-      const response = await fetch(`http://localhost:8000/api/v1/document-processing/statistics/${documentId}`);
-      if (!response.ok) {
-        throw new Error('Failed to get document statistics');
-      }
-      const stats: DocumentStatistics = await response.json();
-      setDocumentStatistics(stats);
-      setShowStatisticsModal(true);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to get document statistics');
-    } finally {
-      setProcessingLoading(false);
-    }
-  };
-
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -176,15 +143,15 @@ function Documents() {
     <div className="min-h-screen bg-white">
       {/* Header */}
       <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex justify-between items-center">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-6">
+          <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-3">
             <div>
-              <h1 className="text-3xl font-semibold text-gray-900 tracking-tight">Documents</h1>
-              <p className="mt-1 text-gray-600">Manage your industrial documents</p>
+              <h1 className="text-2xl md:text-3xl font-semibold text-gray-900 tracking-tight">Documents</h1>
+              <p className="mt-0.5 md:mt-1 text-xs md:text-sm text-gray-600">Manage your industrial documents</p>
             </div>
             <button
               onClick={() => setShowUploadModal(true)}
-              className="bg-gray-900 text-white px-6 py-2.5 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+              className="bg-gray-900 text-white px-4 md:px-6 py-2 md:py-2.5 rounded-lg text-xs md:text-sm font-medium hover:bg-gray-800 transition-colors self-start md:self-auto"
             >
               Upload Document
             </button>
@@ -193,9 +160,9 @@ function Documents() {
       </div>
 
       {/* Filters */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="bg-white rounded-lg p-4 border border-gray-200">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-6">
+        <div className="bg-white rounded-lg p-3 md:p-4 border border-gray-200">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-3 md:gap-4">
             <input
               type="text"
               placeholder="Search by filename..."
@@ -263,134 +230,113 @@ function Documents() {
           ) : documents.length === 0 ? (
             <div className="p-8 text-center text-gray-600">No documents found</div>
           ) : (
-            <table className="min-w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Document Name</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Category</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Size</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Upload Date</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Version</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-900 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {documents.map((doc) => (
-                  <tr key={doc.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="flex-shrink-0 h-8 w-8 bg-gray-100 rounded-lg flex items-center justify-center">
-                          <svg className="h-5 w-5 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd" />
-                          </svg>
-                        </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">{doc.document_name}</div>
-                          <div className="text-xs text-gray-500">{doc.original_filename}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-900">
-                        {doc.document_category.replace('_', ' ')}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                      {formatFileSize(doc.file_size)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                      {formatDate(doc.uploaded_at)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        doc.processing_status === 'COMPLETED' ? 'bg-green-100 text-green-900' :
-                        doc.processing_status === 'PROCESSING' ? 'bg-yellow-100 text-yellow-900' :
-                        doc.processing_status === 'FAILED' ? 'bg-red-100 text-red-900' :
-                        'bg-gray-100 text-gray-900'
-                      }`}>
-                        {doc.processing_status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                      v{doc.version}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button
-                        onClick={() => navigate(`/documents/${doc.id}`)}
-                        className="text-gray-700 hover:text-gray-900 mr-3"
-                      >
-                        Details
-                      </button>
-                      <button
-                        onClick={() => handleProcessDocument(doc.id)}
-                        disabled={processingLoading}
-                        className="text-gray-700 hover:text-gray-900 mr-3 disabled:opacity-50"
-                      >
-                        Process
-                      </button>
-                      <button
-                        onClick={() => handleGetStatistics(doc.id)}
-                        disabled={processingLoading}
-                        className="text-gray-700 hover:text-gray-900 mr-3 disabled:opacity-50"
-                      >
-                        Statistics
-                      </button>
-                      <button
-                        onClick={() => handleDownload(doc.id, doc.original_filename)}
-                        className="text-gray-700 hover:text-gray-900 mr-3"
-                      >
-                        Download
-                      </button>
-                      <button
-                        onClick={() => {
-                          setSelectedDocument(doc);
-                          setShowEditModal(true);
-                        }}
-                        className="text-gray-700 hover:text-gray-900 mr-3"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => {
-                          setSelectedDocument(doc);
-                          setShowDeleteDialog(true);
-                        }}
-                        className="text-red-600 hover:text-red-900"
-                      >
-                        Delete
-                      </button>
-                    </td>
+            <div className="overflow-x-auto">
+              <table className="min-w-full">
+                <thead className="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Document Name</th>
+                    <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider hidden md:table-cell">Category</th>
+                    <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider hidden sm:table-cell">Size</th>
+                    <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider hidden sm:table-cell">Upload Date</th>
+                    <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider hidden md:table-cell">Status</th>
+                    <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider hidden lg:table-cell">Version</th>
+                    <th className="px-3 md:px-6 py-3 text-right text-xs font-medium text-gray-900 uppercase tracking-wider">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {documents.map((doc) => (
+                    <tr key={doc.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className="flex-shrink-0 h-8 w-8 bg-gray-100 rounded-lg flex items-center justify-center">
+                            <svg className="h-5 w-5 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd" />
+                            </svg>
+                          </div>
+                          <div className="ml-2 md:ml-4">
+                            <div className="text-xs md:text-sm font-medium text-gray-900 truncate max-w-[120px] md:max-w-none">{doc.document_name}</div>
+                            <div className="text-xs text-gray-500 hidden md:block">{doc.original_filename}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap hidden md:table-cell">
+                        <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-900">
+                          {doc.document_category.replace('_', ' ')}
+                        </span>
+                      </td>
+                      <td className="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap text-xs md:text-sm text-gray-600 hidden sm:table-cell">
+                        {formatFileSize(doc.file_size)}
+                      </td>
+                      <td className="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap text-xs md:text-sm text-gray-600 hidden sm:table-cell">
+                        {formatDate(doc.uploaded_at)}
+                      </td>
+                      <td className="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap hidden md:table-cell">
+                        <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                          doc.processing_status === 'COMPLETED' ? 'bg-green-100 text-green-900' :
+                          doc.processing_status === 'PROCESSING' ? 'bg-yellow-100 text-yellow-900' :
+                          doc.processing_status === 'FAILED' ? 'bg-red-100 text-red-900' :
+                          'bg-gray-100 text-gray-900'
+                        }`}>
+                          {doc.processing_status}
+                        </span>
+                      </td>
+                      <td className="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap text-xs md:text-sm text-gray-600 hidden lg:table-cell">
+                        v{doc.version}
+                      </td>
+                      <td className="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap text-right text-xs md:text-sm font-medium">
+                        <div className="flex items-center justify-end gap-1 md:gap-2">
+                          <button
+                            onClick={() => navigate(`/dashboard/documents/${doc.id}`)}
+                            className="text-gray-700 hover:text-gray-900 text-xs md:text-sm"
+                          >
+                            Details
+                          </button>
+                          <button
+                            onClick={() => handleProcessDocument(doc.id)}
+                            disabled={processingLoading}
+                            className="text-gray-700 hover:text-gray-900 text-xs md:text-sm disabled:opacity-50 hidden sm:block"
+                          >
+                            Process
+                          </button>
+                          <button
+                            onClick={() => handleDownload(doc.id, doc.original_filename)}
+                            className="text-gray-700 hover:text-gray-900 text-xs md:text-sm"
+                          >
+                            Download
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
-
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="mt-4 flex justify-center space-x-2">
-            <button
-              onClick={() => setPage(Math.max(1, page - 1))}
-              disabled={page === 1}
-              className="px-4 py-2 border border-gray-200 rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-            >
-              Previous
-            </button>
-            <span className="px-4 py-2 text-sm text-gray-600">
-              Page {page} of {totalPages}
-            </span>
-            <button
-              onClick={() => setPage(Math.min(totalPages, page + 1))}
-              disabled={page === totalPages}
-              className="px-4 py-2 border border-gray-200 rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-            >
-              Next
-            </button>
-          </div>
-        )}
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="mt-4 flex justify-center space-x-2">
+          <button
+            onClick={() => setPage(Math.max(1, page - 1))}
+            disabled={page === 1}
+            className="px-4 py-2 border border-gray-200 rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+          >
+            Previous
+          </button>
+          <span className="px-4 py-2 text-sm text-gray-600">
+            Page {page} of {totalPages}
+          </span>
+          <button
+            onClick={() => setPage(Math.min(totalPages, page + 1))}
+            disabled={page === totalPages}
+            className="px-4 py-2 border border-gray-200 rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+          >
+            Next
+          </button>
+        </div>
+      )}
 
       {/* Upload Modal */}
       {showUploadModal && (
@@ -557,63 +503,6 @@ function Documents() {
             <div className="mt-6 flex justify-end">
               <button
                 onClick={() => setShowProcessingModal(false)}
-                className="px-4 py-2 bg-gray-900 text-white rounded-lg text-sm hover:bg-gray-800"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Statistics Modal */}
-      {showStatisticsModal && documentStatistics && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Document Statistics</h2>
-            <div className="space-y-3">
-              <div className="flex justify-between">
-                <span className="text-sm text-gray-600">Pages:</span>
-                <span className="text-sm font-medium text-gray-900">{documentStatistics.page_count}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-gray-600">Words:</span>
-                <span className="text-sm font-medium text-gray-900">{documentStatistics.word_count}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-gray-600">Characters:</span>
-                <span className="text-sm font-medium text-gray-900">{documentStatistics.character_count}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-gray-600">Paragraphs:</span>
-                <span className="text-sm font-medium text-gray-900">{documentStatistics.paragraph_count}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-gray-600">Tables:</span>
-                <span className="text-sm font-medium text-gray-900">{documentStatistics.table_count}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-gray-600">Images:</span>
-                <span className="text-sm font-medium text-gray-900">{documentStatistics.image_count}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-gray-600">Sections:</span>
-                <span className="text-sm font-medium text-gray-900">{documentStatistics.section_count}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-gray-600">Language:</span>
-                <span className="text-sm font-medium text-gray-900">{documentStatistics.language}</span>
-              </div>
-              {documentStatistics.estimated_reading_time && (
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">Reading Time:</span>
-                  <span className="text-sm font-medium text-gray-900">{documentStatistics.estimated_reading_time} min</span>
-                </div>
-              )}
-            </div>
-            <div className="mt-6 flex justify-end">
-              <button
-                onClick={() => setShowStatisticsModal(false)}
                 className="px-4 py-2 bg-gray-900 text-white rounded-lg text-sm hover:bg-gray-800"
               >
                 Close

@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
 from app.config.settings import settings
 from app.core.logging import setup_logging
 from app.middleware.cors import add_cors_middleware
@@ -16,6 +17,53 @@ from app.config.database import init_db
 from app.config.neo4j import init_neo4j, close_neo4j
 from app.config.qdrant import init_qdrant, close_qdrant
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Lifespan event handler for startup and shutdown events."""
+    logger = setup_logging()
+    logger.info(f"Starting {settings.app_name} v{settings.app_version}")
+    
+    # Startup
+    logger.info("Application startup")
+    # Initialize database and create tables
+    try:
+        init_db()
+        logger.info("Database initialized successfully")
+    except Exception as e:
+        logger.error(f"Failed to initialize database: {e}")
+    
+    # Initialize Neo4j connection
+    try:
+        init_neo4j()
+        logger.info("Neo4j initialized successfully")
+    except Exception as e:
+        logger.warning(f"Neo4j initialization failed - some features may be unavailable: {e}")
+    
+    # Initialize Qdrant connection
+    try:
+        init_qdrant()
+        logger.info("Qdrant initialized successfully")
+    except Exception as e:
+        logger.warning(f"Qdrant initialization failed - some features may be unavailable: {e}")
+    
+    yield
+    
+    # Shutdown
+    logger.info("Application shutdown")
+    # Close Neo4j connection
+    try:
+        close_neo4j()
+        logger.info("Neo4j connection closed")
+    except Exception as e:
+        logger.error(f"Error closing Neo4j connection: {e}")
+    
+    # Close Qdrant connection
+    try:
+        close_qdrant()
+        logger.info("Qdrant connection closed")
+    except Exception as e:
+        logger.error(f"Error closing Qdrant connection: {e}")
+
 def create_app() -> FastAPI:
     """Application factory to create FastAPI application."""
     
@@ -23,13 +71,14 @@ def create_app() -> FastAPI:
     logger = setup_logging()
     logger.info(f"Starting {settings.app_name} v{settings.app_version}")
     
-    # Create FastAPI application
+    # Create FastAPI application with lifespan
     app = FastAPI(
         title=settings.app_name,
         version=settings.app_version,
         description="Industrial Knowledge Intelligence Platform",
         docs_url="/docs",
         redoc_url="/redoc",
+        lifespan=lifespan,
     )
     
     # Add CORS middleware
@@ -49,49 +98,6 @@ def create_app() -> FastAPI:
     app.include_router(embedding_pipeline_router, tags=["embeddings"])
     app.include_router(hybrid_retrieval_router, tags=["hybrid-retrieval"])
     app.include_router(rag_engine_router, prefix="/api/v1", tags=["rag-engine"])
-    
-    # Startup event
-    @app.on_event("startup")
-    async def startup_event():
-        logger.info("Application startup")
-        # Initialize database and create tables
-        try:
-            init_db()
-            logger.info("Database initialized successfully")
-        except Exception as e:
-            logger.error(f"Failed to initialize database: {e}")
-        
-        # Initialize Neo4j connection
-        try:
-            init_neo4j()
-            logger.info("Neo4j initialized successfully")
-        except Exception as e:
-            logger.warning(f"Neo4j initialization failed - some features may be unavailable: {e}")
-        
-        # Initialize Qdrant connection
-        try:
-            init_qdrant()
-            logger.info("Qdrant initialized successfully")
-        except Exception as e:
-            logger.warning(f"Qdrant initialization failed - some features may be unavailable: {e}")
-    
-    # Shutdown event
-    @app.on_event("shutdown")
-    async def shutdown_event():
-        logger.info("Application shutdown")
-        # Close Neo4j connection
-        try:
-            close_neo4j()
-            logger.info("Neo4j connection closed")
-        except Exception as e:
-            logger.error(f"Error closing Neo4j connection: {e}")
-        
-        # Close Qdrant connection
-        try:
-            close_qdrant()
-            logger.info("Qdrant connection closed")
-        except Exception as e:
-            logger.error(f"Error closing Qdrant connection: {e}")
     
     return app
 

@@ -16,7 +16,7 @@ class Conversation(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     title = Column(String(255), nullable=True)
     status = Column(String(50), default="active")  # active, archived, deleted
-    metadata = Column(JSON, nullable=True)
+    meta = Column(JSON, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
@@ -33,7 +33,7 @@ class ConversationMessage(Base):
     conversation_id = Column(String(100), ForeignKey("conversations.conversation_id"), nullable=False)
     role = Column(String(50), nullable=False)  # user, assistant, system
     content = Column(Text, nullable=False)
-    metadata = Column(JSON, nullable=True)
+    meta = Column(JSON, nullable=True)
     tokens = Column(Integer, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     
@@ -60,7 +60,7 @@ class GenerationLog(Base):
     citations_count = Column(Integer, nullable=True)
     success = Column(Integer, default=1)  # 1 for success, 0 for failure
     error_message = Column(Text, nullable=True)
-    metadata = Column(JSON, nullable=True)
+    meta = Column(JSON, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
 

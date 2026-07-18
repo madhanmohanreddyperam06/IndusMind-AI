@@ -18,12 +18,12 @@ IndusMind AI is designed to ingest industrial documents (PDFs, manuals, maintena
 ### Frontend
 - **Framework**: React 18 with TypeScript
 - **Build Tool**: Vite
-- **Styling**: Tailwind CSS
+- **Styling**: Tailwind CSS with dark mode support
 - **Routing**: React Router v6
-- **State Management**: TanStack Query
+- **State Management**: Zustand
 - **HTTP Client**: Axios
 - **Icons**: Lucide React
-- **Graph Visualization**: React Flow (future)
+- **Graph Visualization**: React Flow
 
 ### Backend
 - **Framework**: FastAPI 0.136.0
@@ -317,18 +317,20 @@ npm run dev
 The application requires the following services to be running:
 
 - **MySQL** (port 3306): Primary database for application data
-- **Neo4j** (ports 7474, 7687): Knowledge graph storage
+- **Neo4j** (ports 7474, 7687): Knowledge graph storage (optional - can be disabled)
   - Username: `neo4j`
   - Password: `indusmind123`
   - HTTP: http://localhost:7474
   - Bolt: bolt://localhost:7687
-- **Qdrant** (ports 6333, 6334): Vector database for semantic search
+- **Qdrant** (ports 6333, 6334): Vector database for semantic search (optional - can be disabled)
   - HTTP: http://localhost:6333
   - gRPC: http://localhost:6334
-- **MinIO** (ports 9000, 9001): Object storage for documents
+- **MinIO** (ports 9000, 9001): Object storage for documents (optional)
   - Console: http://localhost:9001
   - Access Key: `minioadmin`
   - Secret Key: `minioadmin`
+
+**Note**: Neo4j and Qdrant can be disabled in the backend settings if not needed. Set `neo4j_enabled=false` and `qdrant_enabled=false` in the environment variables or settings.
 
 ### Troubleshooting
 
@@ -469,14 +471,17 @@ The application requires the following services to be running:
 
 ### Frontend Pages
 
+- **Landing** - Public landing page with dark mode support
 - **Dashboard** - Main dashboard overview
 - **Documents** - Document management and processing
 - **Document Details** - Knowledge extraction viewer with Entities, Relationships, and Statistics tabs
-- **Knowledge Graph** - Interactive knowledge graph visualization (planned)
-- **AI Copilot** - AI-powered engineering assistant (planned)
-- **Maintenance** - Maintenance records and schedules (planned)
-- **Compliance** - Compliance monitoring and reporting (planned)
-- **Settings** - Application settings and configuration
+- **Knowledge Graph** - Interactive knowledge graph visualization with mock data
+- **AI Copilot** - AI-powered engineering assistant with conversation management
+- **Maintenance** - Maintenance records and schedules
+- **Compliance** - Compliance monitoring and reporting
+- **Analytics** - Analytics and reporting dashboard
+- **Profile** - User profile management
+- **Settings** - Application settings including dark mode toggle
 
 ## Future Roadmap
 

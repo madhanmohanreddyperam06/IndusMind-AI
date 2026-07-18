@@ -2,8 +2,8 @@
 
 import asyncio
 from typing import Dict, Any, Optional, AsyncGenerator
-import google.generativeai as genai
-from google.generativeai.types import GenerateConfig
+import google.genai as genai
+from google.genai.types import GenerateContentConfig
 
 from .base_provider import LLMProvider, GenerationConfig, GenerationResult
 from app.modules.rag_engine.exceptions import ProviderException, ProviderUnavailableException
@@ -23,7 +23,7 @@ class GeminiProvider(LLMProvider):
         """
         super().__init__(api_key=api_key, model=model)
         self.model = model or self.DEFAULT_MODEL
-        self._client: Optional[genai.GenerativeModel] = None
+        self._client: Optional[genai.Client] = None
     
     async def initialize(self) -> None:
         """Initialize Gemini client."""
@@ -31,8 +31,7 @@ class GeminiProvider(LLMProvider):
             raise ProviderException("Gemini API key is required")
         
         try:
-            genai.configure(api_key=self.api_key)
-            self._client = genai.GenerativeModel(self.model)
+            self._client = genai.Client(api_key=self.api_key)
             self._is_initialized = True
         except Exception as e:
             raise ProviderException(f"Failed to initialize Gemini: {str(e)}")
@@ -55,7 +54,7 @@ class GeminiProvider(LLMProvider):
         config = self._validate_config(config)
         
         try:
-            gemini_config = GenerateConfig(
+            gemini_config = GenerateContentConfig(
                 temperature=config.temperature,
                 max_output_tokens=config.max_tokens,
                 top_p=config.top_p
@@ -66,9 +65,10 @@ class GeminiProvider(LLMProvider):
                     setattr(gemini_config, key, value)
             
             response = await asyncio.to_thread(
-                self._client.generate_content,
-                prompt,
-                generation_config=gemini_config
+                self._client.models.generate_content,
+                model=self.model,
+                contents=prompt,
+                config=gemini_config
             )
             
             text = response.text
@@ -109,7 +109,7 @@ class GeminiProvider(LLMProvider):
         config = self._validate_config(config)
         
         try:
-            gemini_config = GenerateConfig(
+            gemini_config = GenerateContentConfig(
                 temperature=config.temperature,
                 max_output_tokens=config.max_tokens,
                 top_p=config.top_p
@@ -120,9 +120,10 @@ class GeminiProvider(LLMProvider):
                     setattr(gemini_config, key, value)
             
             response = await asyncio.to_thread(
-                self._client.generate_content,
-                prompt,
-                generation_config=gemini_config,
+                self._client.models.generate_content,
+                model=self.model,
+                contents=prompt,
+                config=gemini_config,
                 stream=True
             )
             
@@ -216,9 +217,10 @@ Provide only the JSON response:"""
             
             # Simple test generation
             test_response = await asyncio.to_thread(
-                self._client.generate_content,
-                "Hello",
-                generation_config=GenerateConfig(max_output_tokens=10)
+                self._client.models.generate_content,
+                model=self.model,
+                contents="Hello",
+                config=GenerateContentConfig(max_output_tokens=10)
             )
             return bool(test_response.text)
         except Exception:

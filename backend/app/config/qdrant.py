@@ -22,6 +22,11 @@ def init_qdrant() -> QdrantClient:
     """
     global qdrant_client
     
+    # Check if Qdrant is enabled
+    if not settings.qdrant_enabled:
+        logger.info("Qdrant integration is disabled in settings")
+        return None
+    
     try:
         logger.info(f"Initializing Qdrant client at {settings.qdrant_url}")
         
@@ -29,7 +34,8 @@ def init_qdrant() -> QdrantClient:
             url=settings.qdrant_url,
             api_key=settings.qdrant_api_key,
             timeout=settings.qdrant_timeout,
-            prefer_grpc=False  # Use REST by default, can be enabled for performance
+            prefer_grpc=False,  # Use REST by default, can be enabled for performance
+            check_compatibility=False  # Skip version check to avoid warnings
         )
         
         # Verify connection

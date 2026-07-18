@@ -30,6 +30,7 @@ class Settings(BaseSettings):
     mysql_database: str = Field(default="indusmind", description="MySQL database name")
     
     # Neo4j
+    neo4j_enabled: bool = Field(default=False, description="Enable Neo4j integration")
     neo4j_uri: str = Field(default="bolt://localhost:7687", description="Neo4j URI")
     neo4j_user: str = Field(default="neo4j", description="Neo4j username")
     neo4j_password: str = Field(default="indusmind123", description="Neo4j password")
@@ -39,6 +40,7 @@ class Settings(BaseSettings):
     neo4j_connection_acquisition_timeout: int = Field(default=60, description="Neo4j connection acquisition timeout (seconds)")
     
     # Qdrant
+    qdrant_enabled: bool = Field(default=False, description="Enable Qdrant integration")
     qdrant_url: str = Field(default="http://localhost:6333", description="Qdrant URL")
     qdrant_api_key: Optional[str] = Field(default=None, description="Qdrant API key")
     qdrant_collection_name: str = Field(default="industrial_documents", description="Qdrant collection name")
