@@ -1,5 +1,6 @@
 // Knowledge Extraction API Service
 import axios from 'axios';
+import API_CONFIG from '../config/api';
 import type {
   ExtractedEntity,
   ExtractedRelationship,
@@ -10,7 +11,7 @@ import type {
   PaginatedResponse
 } from '../types/extraction';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1';
+const API_BASE = API_CONFIG.BASE_URL_WITH_VERSION;
 
 class ExtractionService {
   private baseURL = `${API_BASE}/knowledge-extraction`;

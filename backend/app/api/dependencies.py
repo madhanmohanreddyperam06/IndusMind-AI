@@ -2,7 +2,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from app.config.database import get_db
-from app.repositories.user import get_user_by_username
+from app.repositories.user import get_user_by_email
 from app.services.auth import decode_token
 from app.models.user import User
 
@@ -20,11 +20,11 @@ async def get_current_user(
         headers={"WWW-Authenticate": "Bearer"},
     )
     
-    username = decode_token(token)
-    if username is None:
+    email = decode_token(token)
+    if email is None:
         raise credentials_exception
     
-    user = get_user_by_username(db, username=username)
+    user = get_user_by_email(db, email=email)
     if user is None:
         raise credentials_exception
     

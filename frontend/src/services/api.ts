@@ -1,4 +1,6 @@
-const API_BASE_URL = 'http://localhost:8000/api/v1';
+import API_CONFIG from '../config/api';
+
+const API_BASE_URL = API_CONFIG.BASE_URL_WITH_VERSION;
 
 export interface User {
   id: number;

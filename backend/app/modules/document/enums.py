@@ -2,8 +2,23 @@
 from enum import Enum
 
 
+class FileCategory(str, Enum):
+    """File category enumeration for enterprise document types."""
+    DOCUMENT = "DOCUMENT"
+    SPREADSHEET = "SPREADSHEET"
+    PRESENTATION = "PRESENTATION"
+    IMAGE = "IMAGE"
+    ENGINEERING_DRAWING = "ENGINEERING_DRAWING"
+    EMAIL = "EMAIL"
+    STRUCTURED_DATA = "STRUCTURED_DATA"
+    LOG_FILE = "LOG_FILE"
+    ARCHIVE = "ARCHIVE"
+    SOURCE_CODE = "SOURCE_CODE"
+    UNKNOWN = "UNKNOWN"
+
+
 class DocumentCategory(str, Enum):
-    """Document category enumeration."""
+    """Document category enumeration (legacy - for backward compatibility)."""
     UNKNOWN = "UNKNOWN"
     OEM_MANUAL = "OEM_MANUAL"
     MAINTENANCE_MANUAL = "MAINTENANCE_MANUAL"
@@ -28,3 +43,11 @@ class ProcessingStatus(str, Enum):
     COMPLETED = "COMPLETED"
     FAILED = "FAILED"
     ARCHIVED = "ARCHIVED"
+
+
+class ProcessingCapability(str, Enum):
+    """Processing capability enumeration."""
+    FULL = "FULL"
+    PARTIAL = "PARTIAL"
+    METADATA_ONLY = "METADATA_ONLY"
+    UNSUPPORTED = "UNSUPPORTED"

@@ -6,7 +6,9 @@ from sqlalchemy.orm import Session
 from typing import Optional
 
 from app.config.database import get_db
+from app.api.dependencies import get_current_active_user
 from app.modules.rag_engine.service import RAGService
+from app.models.user import User
 from app.modules.rag_engine.schemas import (
     GenerationRequest,
     GenerationResponse,
@@ -44,7 +46,8 @@ def get_rag_service(db: Session = Depends(get_db)) -> RAGService:
 @router.post("/generate", response_model=GenerationResponse, status_code=status.HTTP_200_OK)
 async def generate_answer(
     request: GenerationRequest,
-    service: RAGService = Depends(get_rag_service)
+    service: RAGService = Depends(get_rag_service),
+    current_user: User = Depends(get_current_active_user)
 ):
     """Generate an answer using RAG.
     
@@ -68,7 +71,8 @@ async def generate_answer(
 @router.post("/generate/stream")
 async def generate_answer_stream(
     request: GenerationRequest,
-    service: RAGService = Depends(get_rag_service)
+    service: RAGService = Depends(get_rag_service),
+    current_user: User = Depends(get_current_active_user)
 ):
     """Generate an answer with streaming.
     
@@ -101,7 +105,8 @@ async def generate_answer_stream(
 @router.post("/summarize")
 async def summarize_text(
     request: SummarizeRequest,
-    service: RAGService = Depends(get_rag_service)
+    service: RAGService = Depends(get_rag_service),
+    current_user: User = Depends(get_current_active_user)
 ):
     """Summarize text.
     
@@ -126,7 +131,8 @@ async def summarize_text(
 @router.post("/structured")
 async def generate_structured_output(
     request: StructuredOutputRequest,
-    service: RAGService = Depends(get_rag_service)
+    service: RAGService = Depends(get_rag_service),
+    current_user: User = Depends(get_current_active_user)
 ):
     """Generate structured output.
     
@@ -158,7 +164,8 @@ async def generate_structured_output(
 @router.post("/conversation/start", response_model=ConversationResponse, status_code=status.HTTP_201_CREATED)
 async def start_conversation(
     request: ConversationCreate,
-    service: RAGService = Depends(get_rag_service)
+    service: RAGService = Depends(get_rag_service),
+    current_user: User = Depends(get_current_active_user)
 ):
     """Start a new conversation.
     
@@ -187,7 +194,8 @@ async def start_conversation(
 async def add_conversation_message(
     conversation_id: str,
     request: MessageCreate,
-    service: RAGService = Depends(get_rag_service)
+    service: RAGService = Depends(get_rag_service),
+    current_user: User = Depends(get_current_active_user)
 ):
     """Add a message to a conversation.
     
@@ -217,7 +225,8 @@ async def add_conversation_message(
 @router.get("/conversation/{conversation_id}", response_model=ConversationResponse)
 async def get_conversation(
     conversation_id: str,
-    service: RAGService = Depends(get_rag_service)
+    service: RAGService = Depends(get_rag_service),
+    current_user: User = Depends(get_current_active_user)
 ):
     """Get conversation by ID.
     
@@ -242,7 +251,8 @@ async def get_conversation(
 @router.delete("/conversation/{conversation_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_conversation(
     conversation_id: str,
-    service: RAGService = Depends(get_rag_service)
+    service: RAGService = Depends(get_rag_service),
+    current_user: User = Depends(get_current_active_user)
 ):
     """Delete a conversation.
     
@@ -265,7 +275,7 @@ async def delete_conversation(
 # Provider and Configuration Endpoints
 
 @router.get("/providers", response_model=list[ProviderInfo])
-async def get_providers(service: RAGService = Depends(get_rag_service)):
+async def get_providers(service: RAGService = Depends(get_rag_service), current_user: User = Depends(get_current_active_user)):
     """Get available LLM providers.
     
     Args:
@@ -331,7 +341,8 @@ async def health_check(service: RAGService = Depends(get_rag_service)):
 @router.post("/debug", response_model=DebugResponse)
 async def debug_generation(
     request: GenerationRequest,
-    service: RAGService = Depends(get_rag_service)
+    service: RAGService = Depends(get_rag_service),
+    current_user: User = Depends(get_current_active_user)
 ):
     """Generate with debug information.
     

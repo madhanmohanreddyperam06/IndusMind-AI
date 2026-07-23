@@ -10,13 +10,14 @@ class Settings(BaseSettings):
     app_name: str = Field(default="IndusMind AI", description="Application name")
     app_version: str = Field(default="0.1.0", description="Application version")
     host: str = Field(default="0.0.0.0", description="Server host")
-    port: int = Field(default=8000, description="Server port")
+    port: int = Field(default=8001, description="Server port")
     debug: bool = Field(default=False, description="Debug mode")
     
     # Security
-    secret_key: str = Field(default="your-secret-key-here", description="Secret key for JWT")
+    secret_key: str = Field(default="dev-secret-key-change-in-production-12345678", description="Secret key for JWT")
     algorithm: str = Field(default="HS256", description="JWT algorithm")
     access_token_expire_minutes: int = Field(default=30, description="Access token expiration time")
+    refresh_token_expire_days: int = Field(default=7, description="Refresh token expiration time")
     
     # MySQL
     mysql_url: str = Field(
@@ -30,7 +31,7 @@ class Settings(BaseSettings):
     mysql_database: str = Field(default="indusmind", description="MySQL database name")
     
     # Neo4j
-    neo4j_enabled: bool = Field(default=False, description="Enable Neo4j integration")
+    neo4j_enabled: bool = Field(default=True, description="Enable Neo4j integration")
     neo4j_uri: str = Field(default="bolt://localhost:7687", description="Neo4j URI")
     neo4j_user: str = Field(default="neo4j", description="Neo4j username")
     neo4j_password: str = Field(default="indusmind123", description="Neo4j password")
@@ -40,7 +41,7 @@ class Settings(BaseSettings):
     neo4j_connection_acquisition_timeout: int = Field(default=60, description="Neo4j connection acquisition timeout (seconds)")
     
     # Qdrant
-    qdrant_enabled: bool = Field(default=False, description="Enable Qdrant integration")
+    qdrant_enabled: bool = Field(default=True, description="Enable Qdrant integration")
     qdrant_url: str = Field(default="http://localhost:6333", description="Qdrant URL")
     qdrant_api_key: Optional[str] = Field(default=None, description="Qdrant API key")
     qdrant_collection_name: str = Field(default="industrial_documents", description="Qdrant collection name")
@@ -97,6 +98,49 @@ class Settings(BaseSettings):
     # Logging
     log_level: str = Field(default="INFO", description="Log level")
     log_file: str = Field(default="logs/app.log", description="Log file path")
+    
+    # Document Upload
+    max_file_size_mb: int = Field(default=100, description="Maximum file size in MB")
+    max_file_size_bytes: int = Field(default=100 * 1024 * 1024, description="Maximum file size in bytes")
+    max_files_per_upload: int = Field(default=10, description="Maximum number of files per upload")
+    allowed_extensions: list[str] = Field(
+        default=[
+            # Documents
+            'pdf', 'doc', 'docx', 'rtf', 'txt', 'md', 'odt',
+            # Spreadsheets
+            'xls', 'xlsx', 'csv', 'tsv', 'ods',
+            # Presentations
+            'ppt', 'pptx', 'odp',
+            # Images
+            'jpg', 'jpeg', 'png', 'bmp', 'tiff', 'tif', 'webp', 'gif', 'heic', 'svg',
+            # Engineering Drawings
+            'dwg', 'dxf', 'vsd', 'vsdx', 'drawio',
+            # Emails
+            'eml', 'msg',
+            # Structured Data
+            'json', 'xml', 'yaml', 'yml',
+            # Log Files
+            'log',
+            # Archives
+            'zip', 'tar', 'gz', 'tgz',
+            # Source Code
+            'py', 'java', 'js', 'ts', 'c', 'cpp', 'cs', 'go', 'sh', 'sql'
+        ],
+        description="Allowed file extensions"
+    )
+    blocked_extensions: list[str] = Field(
+        default=['exe', 'dll', 'bat', 'msi', 'apk', 'sh', 'cmd', 'ps1', 'vbs', 'jar', 'com', 'scr'],
+        description="Blocked file extensions for security"
+    )
+    
+    # Archive Extraction
+    archive_extraction_enabled: bool = Field(default=True, description="Enable archive extraction")
+    max_archive_extraction_depth: int = Field(default=5, description="Maximum archive extraction depth")
+    max_archive_size_bytes: int = Field(default=500 * 1024 * 1024, description="Maximum archive size in bytes")
+    
+    # OCR
+    ocr_enabled: bool = Field(default=True, description="Enable OCR processing")
+    ocr_language: str = Field(default="eng", description="OCR language")
     
     class Config:
         env_file = ".env"

@@ -1,8 +1,9 @@
 // Hybrid Retrieval API Service
 import axios from 'axios';
+import API_CONFIG from '../config/api';
 import type { ContextPackage, RetrievedChunk, Entity } from '../types/rag';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1';
+const API_BASE = API_CONFIG.BASE_URL_WITH_VERSION;
 
 class RetrievalService {
   private baseURL = `${API_BASE}/retrieval`;

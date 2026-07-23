@@ -4,7 +4,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import Optional
 from app.config.database import get_db
+from app.api.dependencies import get_current_active_user
 from app.modules.hybrid_retrieval.service import HybridRetrievalService
+from app.models.user import User
 from app.modules.hybrid_retrieval.schemas import (
     RetrievalRequest,
     RetrievalResponse,
@@ -26,7 +28,7 @@ from app.core.logging import setup_logging
 
 logger = setup_logging()
 
-router = APIRouter(prefix="/api/v1/retrieval", tags=["Hybrid Retrieval"])
+router = APIRouter()
 
 
 def get_hybrid_retrieval_service(db: Session = Depends(get_db)) -> HybridRetrievalService:
@@ -44,7 +46,8 @@ def get_hybrid_retrieval_service(db: Session = Depends(get_db)) -> HybridRetriev
 @router.post("/query", response_model=RetrievalResponse)
 async def query(
     request: RetrievalRequest,
-    service: HybridRetrievalService = Depends(get_hybrid_retrieval_service)
+    service: HybridRetrievalService = Depends(get_hybrid_retrieval_service),
+    current_user: User = Depends(get_current_active_user)
 ) -> RetrievalResponse:
     """Execute hybrid retrieval query.
     
@@ -65,7 +68,8 @@ async def query(
 @router.post("/context", response_model=ContextResponse)
 async def generate_context(
     request: ContextRequest,
-    service: HybridRetrievalService = Depends(get_hybrid_retrieval_service)
+    service: HybridRetrievalService = Depends(get_hybrid_retrieval_service),
+    current_user: User = Depends(get_current_active_user)
 ) -> ContextResponse:
     """Generate context package for RAG.
     
@@ -86,7 +90,8 @@ async def generate_context(
 @router.post("/analyze", response_model=QueryAnalysisResponse)
 async def analyze(
     request: QueryAnalysisRequest,
-    service: HybridRetrievalService = Depends(get_hybrid_retrieval_service)
+    service: HybridRetrievalService = Depends(get_hybrid_retrieval_service),
+    current_user: User = Depends(get_current_active_user)
 ) -> QueryAnalysisResponse:
     """Analyze a user query.
     
@@ -107,7 +112,8 @@ async def analyze(
 @router.post("/expand", response_model=QueryExpansionResponse)
 async def expand(
     request: QueryExpansionRequest,
-    service: HybridRetrievalService = Depends(get_hybrid_retrieval_service)
+    service: HybridRetrievalService = Depends(get_hybrid_retrieval_service),
+    current_user: User = Depends(get_current_active_user)
 ) -> QueryExpansionResponse:
     """Expand a query with industrial terminology.
     
@@ -146,7 +152,8 @@ async def health_check(
 
 @router.get("/statistics", response_model=StatisticsResponse)
 async def get_statistics(
-    service: HybridRetrievalService = Depends(get_hybrid_retrieval_service)
+    service: HybridRetrievalService = Depends(get_hybrid_retrieval_service),
+    current_user: User = Depends(get_current_active_user)
 ) -> StatisticsResponse:
     """Get retrieval statistics.
     
@@ -165,7 +172,8 @@ async def get_statistics(
 
 @router.get("/config", response_model=ConfigResponse)
 async def get_config(
-    service: HybridRetrievalService = Depends(get_hybrid_retrieval_service)
+    service: HybridRetrievalService = Depends(get_hybrid_retrieval_service),
+    current_user: User = Depends(get_current_active_user)
 ) -> ConfigResponse:
     """Get default configuration.
     
@@ -185,7 +193,8 @@ async def get_config(
 @router.post("/test", response_model=TestResponse)
 async def test(
     request: TestRequest,
-    service: HybridRetrievalService = Depends(get_hybrid_retrieval_service)
+    service: HybridRetrievalService = Depends(get_hybrid_retrieval_service),
+    current_user: User = Depends(get_current_active_user)
 ) -> TestResponse:
     """Test retrieval with specified sources.
     
@@ -206,7 +215,8 @@ async def test(
 @router.post("/debug", response_model=DebugResponse)
 async def debug(
     request: DebugRequest,
-    service: HybridRetrievalService = Depends(get_hybrid_retrieval_service)
+    service: HybridRetrievalService = Depends(get_hybrid_retrieval_service),
+    current_user: User = Depends(get_current_active_user)
 ) -> DebugResponse:
     """Debug retrieval with detailed intermediate results.
     

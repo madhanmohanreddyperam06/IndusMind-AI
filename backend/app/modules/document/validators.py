@@ -4,13 +4,15 @@ from typing import Tuple, Optional
 from app.modules.document.constants import (
     ALLOWED_EXTENSIONS,
     ALLOWED_MIME_TYPES,
-    MAX_FILE_SIZE_BYTES
+    MAX_FILE_SIZE_BYTES,
+    BLOCKED_EXTENSIONS
 )
 from app.modules.document.exceptions import (
     FileSizeExceededException,
     InvalidFileTypeException,
     CorruptedException
 )
+from app.modules.document.file_detector import FileDetector
 
 
 class FileValidator:
@@ -45,12 +47,18 @@ class FileValidator:
             Lowercase file extension without dot
             
         Raises:
-            InvalidFileTypeException: If extension is not allowed
+            InvalidFileTypeException: If extension is not allowed or is blocked
         """
         if '.' not in filename:
             raise InvalidFileTypeException("File has no extension")
         
         extension = filename.rsplit('.', 1)[-1].lower()
+        
+        # Check for blocked extensions first
+        if extension in BLOCKED_EXTENSIONS:
+            raise InvalidFileTypeException(
+                f"File type '{extension}' is blocked for security reasons"
+            )
         
         if extension not in ALLOWED_EXTENSIONS:
             raise InvalidFileTypeException(
@@ -72,9 +80,11 @@ class FileValidator:
             InvalidFileTypeException: If MIME type is not allowed or doesn't match
         """
         if mime_type not in ALLOWED_MIME_TYPES:
-            raise InvalidFileTypeException(
-                f"MIME type '{mime_type}' is not allowed"
-            )
+            # Allow application/octet-stream as fallback
+            if mime_type != 'application/octet-stream':
+                raise InvalidFileTypeException(
+                    f"MIME type '{mime_type}' is not allowed"
+                )
     
     @staticmethod
     def calculate_checksum(content: bytes) -> str:
@@ -111,8 +121,8 @@ class FileValidator:
         filename: str,
         content: bytes,
         mime_type: str
-    ) -> Tuple[str, str, str]:
-        """Validate file completely.
+    ) -> Tuple[str, str, str, str]:
+        """Validate file completely with enhanced detection.
         
         Args:
             filename: Original filename
@@ -120,11 +130,11 @@ class FileValidator:
             mime_type: MIME type from file
             
         Returns:
-            Tuple of (sanitized_filename, extension, checksum)
+            Tuple of (sanitized_filename, extension, checksum, detected_mime_type)
             
         Raises:
             FileSizeExceededException: If file size exceeds limit
-            InvalidFileTypeException: If file type is not allowed
+            InvalidFileTypeException: If file type is not allowed or is blocked
             CorruptedException: If file is corrupted or empty
         """
         # Validate size
@@ -133,8 +143,17 @@ class FileValidator:
         # Validate and extract extension
         extension = FileValidator.validate_file_extension(filename)
         
-        # Validate MIME type
-        FileValidator.validate_mime_type(mime_type, extension)
+        # Detect file type using magic bytes and MIME type
+        detected_mime_type, detected_extension, category = FileDetector.validate_file_type(
+            filename, content, mime_type
+        )
+        
+        # Use detected extension if different from original
+        if detected_extension and detected_extension != extension:
+            extension = detected_extension
+        
+        # Validate MIME type (use detected if available)
+        FileValidator.validate_mime_type(detected_mime_type or mime_type, extension)
         
         # Calculate checksum
         checksum = FileValidator.calculate_checksum(content)
@@ -142,4 +161,4 @@ class FileValidator:
         # Sanitize filename
         sanitized_filename = FileValidator.sanitize_filename(filename)
         
-        return sanitized_filename, extension, checksum
+        return sanitized_filename, extension, checksum, detected_mime_type

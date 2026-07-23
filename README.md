@@ -48,11 +48,11 @@ IndusMind AI is designed to ingest industrial documents (PDFs, manuals, maintena
 
 ### Databases
 - **MySQL**: Relational data storage
-- **Neo4j**: Knowledge graph storage
-- **Qdrant**: Vector embeddings and similarity search (planned)
+- **Neo4j**: Knowledge graph storage (optional - can be disabled)
+- **Qdrant**: Vector embeddings and similarity search (optional - can be disabled)
 
 ### Storage
-- **MinIO**: Object storage for documents and files (planned)
+- **MinIO**: Object storage for documents and files (optional)
 - **Local Storage**: Current file storage implementation
 
 ### Containerization
@@ -268,8 +268,8 @@ docker-compose up -d
 
 4. Access the application:
 - Frontend: http://localhost:3000
-- Backend API: http://localhost:8000
-- API Documentation: http://localhost:8000/docs
+- Backend API: http://localhost:8001
+- API Documentation: http://localhost:8001/docs
 - Neo4j Browser: http://localhost:7474
 - Qdrant Dashboard: http://localhost:6333/dashboard
 
@@ -307,8 +307,8 @@ npm run dev
 
 5. Access the application:
 - Frontend: http://localhost:3000
-- Backend API: http://localhost:8000
-- API Documentation: http://localhost:8000/docs
+- Backend API: http://localhost:8001
+- API Documentation: http://localhost:8001/docs
 - Neo4j Browser: http://localhost:7474 (username: neo4j, password: indusmind123)
 - Qdrant Dashboard: http://localhost:6333/dashboard
 
@@ -366,7 +366,7 @@ The application requires the following services to be running:
 - `GET /api/v1/auth/me` - Get current user info
 
 #### Document Management
-- `POST /api/v1/documents/upload` - Upload a single document
+- `POST /api/v1/documents/upload` - Upload a single document with enhanced file type detection
 - `POST /api/v1/documents/upload/multiple` - Upload multiple documents
 - `GET /api/v1/documents` - List documents with pagination, filtering, and sorting
 - `GET /api/v1/documents/{id}` - Get document by ID
@@ -374,6 +374,27 @@ The application requires the following services to be running:
 - `PATCH /api/v1/documents/{id}` - Update document metadata
 - `DELETE /api/v1/documents/{id}` - Soft delete document
 - `GET /api/v1/documents/search/query` - Search documents by filename
+
+**Supported File Types:**
+The document upload module supports enterprise-grade file types across multiple categories:
+
+- **📄 Documents**: PDF, DOC, DOCX, RTF, TXT, Markdown (MD), ODT
+- **📊 Spreadsheets**: XLS, XLSX, CSV, TSV, ODS
+- **📽 Presentations**: PPT, PPTX, ODP
+- **🖼 Images**: JPG, JPEG, PNG, BMP, TIFF, WEBP, GIF, HEIC, SVG
+- **📐 Engineering Drawings**: DWG, DXF, VSD, VSDX, DRAWIO
+- **📧 Emails**: EML, MSG
+- **📦 Archives**: ZIP, TAR, TAR.GZ, TGZ (with secure extraction)
+- **⚙ Structured Data**: JSON, XML, YAML, YML
+- **📝 Log Files**: LOG, TXT, CSV
+- **💻 Source Code**: PY, JAVA, JS, TS, C, CPP, CS, GO, SH, SQL
+
+**File Detection Features:**
+- Automatic file type detection using magic bytes, MIME type, and file extension
+- Security validation to block executable files (.exe, .dll, .bat, etc.)
+- Configurable file size limits (default: 100 MB)
+- Archive extraction with Zip Slip protection
+- File categorization for processing pipeline routing
 
 #### Document Processing
 - `POST /api/v1/document-processing/process/{document_id}` - Process a document
@@ -483,9 +504,18 @@ The application requires the following services to be running:
 - **Profile** - User profile management
 - **Settings** - Application settings including dark mode toggle
 
-## Future Roadmap
+## Implementation Status
 
-### Phase 1: Document Processing ✅ COMPLETED
+### ✅ Fully Functional Features
+
+#### Authentication & User Management
+- **Status**: ⚠️ Needs Critical Security Fixes
+- **Implemented**: JWT-based authentication, user registration, login, logout
+- **Issues**: Hardcoded secret key, no authentication on business endpoints, username/email mismatch
+- **Priority**: Critical - Must fix before production
+
+#### Document Processing
+- **Status**: ✅ Fully Functional
 - Document upload and ingestion
 - OCR for scanned documents (PaddleOCR + Tesseract fallback)
 - PDF parsing and text extraction (pdfplumber)
@@ -501,7 +531,8 @@ The application requires the following services to be running:
 - Async processing queue and worker
 - RESTful API for document processing
 
-### Phase 2: Knowledge Extraction ✅ COMPLETED
+#### Knowledge Extraction
+- **Status**: ✅ Fully Functional
 - **Entity Extraction**: 21 entity extractors implemented
   - Equipment, Component, Failure, Cause, MaintenanceActivity, Inspection, WorkOrder
   - Regulation, Standard, DocumentReference, Person, Department, Organization, Vendor
@@ -520,7 +551,8 @@ The application requires the following services to be running:
 - **Frontend Integration**: Document Details page with Entities, Relationships, and Statistics tabs
 - **Testing Suite**: Unit tests for all extractors, integration tests for orchestrators and service layer
 
-### Phase 3: Knowledge Graph ✅ COMPLETED
+#### Knowledge Graph
+- **Status**: ✅ Fully Functional (Optional - can be disabled)
 - **Neo4j Integration**: Production-ready Neo4j driver with connection pooling
 - **Graph Data Model**: Node and relationship schemas for all entity and relationship types
 - **Graph Builder**: Automatic conversion of MySQL entities/relationships to Neo4j graph
@@ -532,7 +564,8 @@ The application requires the following services to be running:
 - **Testing Suite**: Unit tests for repository, builder, synchronization, and integration tests
 - **Architecture**: Clean Architecture with Repository → Service → API layers
 
-### Phase 4: Semantic Retrieval ✅ COMPLETED
+#### Semantic Retrieval (Embeddings)
+- **Status**: ✅ Fully Functional (Optional - can be disabled)
 - **Qdrant Integration**: Production-ready Qdrant client with connection pooling and health checks
 - **Document Chunking**: Intelligent chunking with multiple strategies (paragraph, section, sliding window, hierarchical)
 - **Embedding Generation**: BAAI/bge-small-en-v1.5 model with SentenceTransformers, GPU support, caching
@@ -545,7 +578,8 @@ The application requires the following services to be running:
 - **Testing Suite**: Unit tests for chunker, embedding generator, Qdrant repository, synchronization, and integration tests
 - **Architecture**: Clean Architecture with Repository → Service → API layers, integration with existing MySQL and Neo4j
 
-### Phase 5: Hybrid Retrieval Engine ✅ COMPLETED
+#### Hybrid Retrieval Engine
+- **Status**: ✅ Fully Functional
 - **Query Analysis**: Intelligent query analysis for intent detection, entity extraction, question classification
 - **Query Expansion**: Industrial terminology expansion with synonyms, acronyms, aliases, and related terms
 - **Vector Retrieval**: Integration with Qdrant for semantic search with metadata filtering
@@ -561,7 +595,8 @@ The application requires the following services to be running:
 - **REST API**: Complete API endpoints for query, context, analysis, expansion, health, statistics, config, test, and debug
 - **Testing Suite**: Unit tests for query analyzer, ranking engine, context builder; integration tests for all API endpoints
 
-### Phase 6: RAG Generation Engine ✅ COMPLETED
+#### RAG Generation Engine
+- **Status**: ✅ Fully Functional
 - **LLM Provider Abstraction**: Pluggable architecture with base provider interface
 - **Gemini Provider**: Full Google Gemini integration with streaming support
 - **Placeholder Providers**: OpenAI, Ollama, and Mock providers for extensibility
@@ -579,12 +614,63 @@ The application requires the following services to be running:
 - **Testing Suite**: Unit tests for all components (context formatter, citation manager, confidence estimator, hallucination guard, prompt builder, response formatter, mock provider)
 - **Database Models**: Conversation, ConversationMessage, GenerationLog, PromptLog for full conversation tracking and analytics
 
-### Phase 7: Advanced Features 🚧 PLANNED
+### 🚧 Placeholder / Not Implemented Features
+
+#### Role-Based Access Control (RBAC)
+- **Status**: ❌ Not Implemented
+- **Current State**: Only `is_superuser` boolean flag exists
+- **Missing**: Role model, Permission model, User-Role assignments, Role-Permission mappings, Authorization middleware
+- **Priority**: Critical - Must implement before production
+- **Estimated Effort**: 6 weeks
+
+#### Administrative Functions
+- **Status**: ❌ Not Implemented
+- **Missing**: User management UI, Role management UI, System configuration interface
+- **Priority**: High - Requires RBAC implementation first
+
+#### User Profile Management
+- **Status**: ❌ Not Implemented
+- **Missing**: Profile update endpoints, Password change, Email verification
+- **Priority**: Medium
+
+#### Password Reset
+- **Status**: ❌ Not Implemented
+- **Missing**: Password reset flow, Email-based reset tokens
+- **Priority**: Medium
+
+#### Audit Logging
+- **Status**: ⚠️ Partially Implemented
+- **Implemented**: Basic request/response logging
+- **Missing**: Authorization event logging, Permission change logging, Privileged action logging
+- **Priority**: Medium
+
+#### Advanced Features
+- **Status**: 🚧 Planned
 - Real-time document processing
 - Multi-modal document analysis
 - Collaborative annotation
 - Version control for documents
 - Advanced analytics and reporting
+- Priority: Low
+
+### ⚠️ Known Issues
+
+#### Critical Security Issues
+1. **Hardcoded JWT Secret Key**: Secret key is hardcoded in settings.py
+2. **No Authentication on Business Endpoints**: 50+ endpoints are completely unprotected
+3. **Username/Email Mismatch**: Authentication middleware has critical bug
+4. **No RBAC System**: No role-based access control implementation
+
+#### Configuration Issues
+1. **Password Validation Inconsistent**: Frontend requires 10+ chars, backend only 8
+2. **No Rate Limiting**: No rate limiting on authentication endpoints
+3. **No Token Refresh**: No refresh token mechanism
+4. **Client-Side Token Storage**: Tokens stored in localStorage (XSS risk)
+
+#### Frontend Issues
+1. **Mock Data**: Knowledge Graph visualization uses mock data
+2. **Placeholder Pages**: Maintenance, Compliance, Analytics pages are placeholders
+3. **No Role-Based UI**: No role-based menu or button visibility
 
 ## Development Guidelines
 

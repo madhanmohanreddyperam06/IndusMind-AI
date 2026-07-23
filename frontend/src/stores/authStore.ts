@@ -1,6 +1,7 @@
 // Auth Store - User Authentication State
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import API_CONFIG from '../config/api';
 
 interface User {
   id: number;
@@ -50,7 +51,7 @@ export const useAuthStore = create<AuthState>()(
           formData.append('password', password);
 
           const response = await fetch(
-            `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1'}/auth/login`,
+            `${API_CONFIG.BASE_URL_WITH_VERSION}/auth/login`,
             {
               method: 'POST',
               body: formData,
@@ -66,8 +67,7 @@ export const useAuthStore = create<AuthState>()(
 
           // Fetch user data after getting token
           const userResponse = await fetch(
-            `${import.meta.env.VITE_API_BASE_URL ||
-              'http://localhost:8000/api/v1'}/auth/me`,
+            `${API_CONFIG.BASE_URL_WITH_VERSION}/auth/me`,
             {
               headers: {
                 Authorization: `Bearer ${token}`,

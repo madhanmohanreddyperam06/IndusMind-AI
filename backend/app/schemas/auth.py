@@ -11,7 +11,7 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     """Schema for user registration."""
-    password: str = Field(..., min_length=8, max_length=100)
+    password: str = Field(..., min_length=10, max_length=100)
 
 
 class UserLogin(BaseModel):

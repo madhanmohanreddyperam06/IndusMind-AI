@@ -4,6 +4,7 @@ from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from typing import Optional, List
 from app.config.database import get_db
+from app.api.dependencies import get_current_active_user
 from app.modules.document.service import DocumentService
 from app.modules.document.schemas import (
     DocumentResponse,
@@ -22,6 +23,7 @@ from app.modules.document.exceptions import (
     StorageException
 )
 from app.core.logging import setup_logging
+from app.models.user import User
 
 logger = setup_logging()
 router = APIRouter()
@@ -39,16 +41,19 @@ async def upload_document(
     description: Optional[str] = None,
     tags: Optional[str] = None,
     category: Optional[str] = None,
-    service: DocumentService = Depends(get_document_service)
+    upload_source: Optional[str] = Query('web'),
+    service: DocumentService = Depends(get_document_service),
+    current_user: User = Depends(get_current_active_user)
 ):
-    """Upload a single document.
+    """Upload a single document with enhanced file type detection.
     
     Args:
         file: Uploaded file
         document_name: Display name for document
         description: Document description
         tags: Comma-separated tags
-        category: Document category
+        category: Document category (legacy)
+        upload_source: Source of upload (web, api, etc.)
         service: Document service
         
     Returns:
@@ -69,10 +74,11 @@ async def upload_document(
             document_name=document_name,
             description=description,
             tags=tag_list,
-            category=category
+            category=category,
+            upload_source=upload_source
         )
         
-        logger.info(f"Document uploaded successfully: {document.id}")
+        logger.info(f"Document uploaded successfully: {document.id}, category: {document.file_category}")
         return UploadResponse(document=document, message="Document uploaded successfully")
         
     except DuplicateFileException as e:
@@ -104,7 +110,8 @@ async def upload_document(
 @router.post("/upload/multiple", response_model=List[UploadResponse])
 async def upload_multiple_documents(
     files: List[UploadFile] = File(...),
-    service: DocumentService = Depends(get_document_service)
+    service: DocumentService = Depends(get_document_service),
+    current_user: User = Depends(get_current_active_user)
 ):
     """Upload multiple documents.
     
@@ -152,11 +159,12 @@ def list_documents(
     page_size: int = Query(20, ge=1, le=100),
     filename: Optional[str] = Query(None),
     category: Optional[str] = Query(None),
-    status: Optional[ProcessingStatus] = Query(None),
+    processing_status: Optional[ProcessingStatus] = Query(None),
     uploaded_by: Optional[str] = Query(None),
     sort_by: str = Query("uploaded_at"),
     sort_order: str = Query("desc", pattern="^(asc|desc)$"),
-    service: DocumentService = Depends(get_document_service)
+    service: DocumentService = Depends(get_document_service),
+    current_user: User = Depends(get_current_active_user)
 ):
     """List documents with pagination, filtering, and sorting.
     
@@ -165,7 +173,7 @@ def list_documents(
         page_size: Number of items per page
         filename: Filter by filename
         category: Filter by category
-        status: Filter by processing status
+        processing_status: Filter by processing status
         uploaded_by: Filter by uploader
         sort_by: Field to sort by
         sort_order: Sort order (asc or desc)
@@ -178,7 +186,7 @@ def list_documents(
         filters = DocumentSearchFilters(
             filename=filename,
             category=category,
-            status=status,
+            status=processing_status,
             uploaded_by=uploaded_by
         )
         return service.list_documents(page, page_size, filters, sort_by, sort_order)
@@ -193,7 +201,8 @@ def list_documents(
 @router.get("/{document_id}", response_model=DocumentResponse)
 def get_document(
     document_id: str,
-    service: DocumentService = Depends(get_document_service)
+    service: DocumentService = Depends(get_document_service),
+    current_user: User = Depends(get_current_active_user)
 ):
     """Get document by ID.
     
@@ -223,7 +232,8 @@ def get_document(
 @router.get("/{document_id}/download")
 async def download_document(
     document_id: str,
-    service: DocumentService = Depends(get_document_service)
+    service: DocumentService = Depends(get_document_service),
+    current_user: User = Depends(get_current_active_user)
 ):
     """Download document file.
     
@@ -273,7 +283,8 @@ async def download_document(
 def update_document(
     document_id: str,
     update_data: DocumentUpdate,
-    service: DocumentService = Depends(get_document_service)
+    service: DocumentService = Depends(get_document_service),
+    current_user: User = Depends(get_current_active_user)
 ):
     """Update document metadata.
     
@@ -304,7 +315,8 @@ def update_document(
 @router.delete("/{document_id}", response_model=DocumentDeleteResponse)
 def delete_document(
     document_id: str,
-    service: DocumentService = Depends(get_document_service)
+    service: DocumentService = Depends(get_document_service),
+    current_user: User = Depends(get_current_active_user)
 ):
     """Soft delete a document.
     
@@ -338,7 +350,8 @@ def search_documents(
     query: str = Query(..., min_length=1),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
-    service: DocumentService = Depends(get_document_service)
+    service: DocumentService = Depends(get_document_service),
+    current_user: User = Depends(get_current_active_user)
 ):
     """Search documents by filename.
     

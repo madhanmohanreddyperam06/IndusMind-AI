@@ -27,6 +27,12 @@ Base = declarative_base()
 def init_db():
     """Initialize database connection and create tables."""
     from app.models import user  # Import models to ensure they're registered
+    from app.models.role import Role
+    from app.models.permission import Permission
+    from app.models.user_role import UserRole
+    from app.models.role_permission import RolePermission
+    from app.models.audit_log import AuditLog
+    from app.models.notification import Notification
     from app.modules.document import models  # Import document models
     from app.modules.document_processing import models as processing_models  # Import document processing models
     from app.modules.knowledge_extraction import models as knowledge_models  # Import knowledge extraction models

@@ -3,7 +3,9 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.config.database import get_db
+from app.api.dependencies import get_current_active_user
 from app.modules.knowledge_graph.service import KnowledgeGraphService
+from app.models.user import User
 from app.modules.knowledge_graph.schemas import (
     GraphHealth,
     GraphStatistics,
@@ -26,7 +28,7 @@ from app.core.logging import setup_logging
 
 logger = setup_logging()
 
-router = APIRouter(prefix="/api/v1/graph", tags=["knowledge-graph"])
+router = APIRouter()
 
 
 # ============================================================================
@@ -49,7 +51,7 @@ async def get_graph_health(db: Session = Depends(get_db)):
 # ============================================================================
 
 @router.get("/statistics", response_model=GraphStatistics)
-async def get_graph_statistics(db: Session = Depends(get_db)):
+async def get_graph_statistics(db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
     """Get overall graph statistics."""
     try:
         service = KnowledgeGraphService(db)
@@ -62,7 +64,7 @@ async def get_graph_statistics(db: Session = Depends(get_db)):
 
 
 @router.get("/statistics/node/{entity_id}", response_model=NodeStatistics)
-async def get_node_statistics(entity_id: str, db: Session = Depends(get_db)):
+async def get_node_statistics(entity_id: str, db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
     """Get statistics for a specific node."""
     try:
         service = KnowledgeGraphService(db)
@@ -79,7 +81,7 @@ async def get_node_statistics(entity_id: str, db: Session = Depends(get_db)):
 # ============================================================================
 
 @router.get("/node/{entity_id}", response_model=GraphNode)
-async def get_node(entity_id: str, db: Session = Depends(get_db)):
+async def get_node(entity_id: str, db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
     """Get a node by entity ID."""
     try:
         service = KnowledgeGraphService(db)
@@ -97,7 +99,7 @@ async def get_node(entity_id: str, db: Session = Depends(get_db)):
 
 
 @router.post("/search", response_model=list[GraphNode])
-async def search_nodes(query: EntitySearchQuery, db: Session = Depends(get_db)):
+async def search_nodes(query: EntitySearchQuery, db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
     """Search for nodes by name."""
     try:
         service = KnowledgeGraphService(db)
@@ -113,7 +115,8 @@ async def search_nodes(query: EntitySearchQuery, db: Session = Depends(get_db)):
 async def get_nodes_by_type(
     entity_type: GraphEntityType,
     limit: int = 100,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
 ):
     """Get all nodes of a specific type."""
     try:
@@ -131,7 +134,7 @@ async def get_nodes_by_type(
 # ============================================================================
 
 @router.post("/neighbors", response_model=list[NeighborNode])
-async def get_neighbors(query: NeighborsQuery, db: Session = Depends(get_db)):
+async def get_neighbors(query: NeighborsQuery, db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
     """Get neighbors of a node."""
     try:
         service = KnowledgeGraphService(db)
@@ -144,7 +147,7 @@ async def get_neighbors(query: NeighborsQuery, db: Session = Depends(get_db)):
 
 
 @router.post("/path", response_model=GraphPath)
-async def find_path(query: PathQuery, db: Session = Depends(get_db)):
+async def find_path(query: PathQuery, db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
     """Find shortest path between two nodes."""
     try:
         service = KnowledgeGraphService(db)
@@ -162,7 +165,7 @@ async def find_path(query: PathQuery, db: Session = Depends(get_db)):
 
 
 @router.post("/subgraph", response_model=Subgraph)
-async def get_subgraph(query: SubgraphQuery, db: Session = Depends(get_db)):
+async def get_subgraph(query: SubgraphQuery, db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
     """Get subgraph around a node."""
     try:
         service = KnowledgeGraphService(db)
@@ -187,7 +190,8 @@ async def get_subgraph(query: SubgraphQuery, db: Session = Depends(get_db)):
 async def get_equipment_connections(
     entity_id: str,
     max_depth: int = 3,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
 ):
     """Get all entities connected to equipment."""
     try:
@@ -201,7 +205,7 @@ async def get_equipment_connections(
 
 
 @router.get("/entity/{entity_id}/maintenance", response_model=list[GraphNode])
-async def get_maintenance_history(entity_id: str, db: Session = Depends(get_db)):
+async def get_maintenance_history(entity_id: str, db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
     """Get maintenance history for an entity."""
     try:
         service = KnowledgeGraphService(db)
@@ -214,7 +218,7 @@ async def get_maintenance_history(entity_id: str, db: Session = Depends(get_db))
 
 
 @router.get("/entity/{entity_id}/failures", response_model=list[GraphNode])
-async def get_failures(entity_id: str, db: Session = Depends(get_db)):
+async def get_failures(entity_id: str, db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
     """Get failures related to an entity."""
     try:
         service = KnowledgeGraphService(db)
@@ -227,7 +231,7 @@ async def get_failures(entity_id: str, db: Session = Depends(get_db)):
 
 
 @router.get("/entity/{entity_id}/inspections", response_model=list[GraphNode])
-async def get_inspections(entity_id: str, db: Session = Depends(get_db)):
+async def get_inspections(entity_id: str, db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
     """Get inspections for an entity."""
     try:
         service = KnowledgeGraphService(db)
@@ -240,7 +244,7 @@ async def get_inspections(entity_id: str, db: Session = Depends(get_db)):
 
 
 @router.get("/entity/{entity_id}/vendors", response_model=list[GraphNode])
-async def get_vendors(entity_id: str, db: Session = Depends(get_db)):
+async def get_vendors(entity_id: str, db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
     """Get vendors related to an entity."""
     try:
         service = KnowledgeGraphService(db)
@@ -253,7 +257,7 @@ async def get_vendors(entity_id: str, db: Session = Depends(get_db)):
 
 
 @router.get("/entity/{entity_id}/standards", response_model=list[GraphNode])
-async def get_standards(entity_id: str, db: Session = Depends(get_db)):
+async def get_standards(entity_id: str, db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
     """Get standards applicable to an entity."""
     try:
         service = KnowledgeGraphService(db)
@@ -266,7 +270,7 @@ async def get_standards(entity_id: str, db: Session = Depends(get_db)):
 
 
 @router.get("/entity/{entity_id}/documents", response_model=list[GraphNode])
-async def get_connected_documents(entity_id: str, db: Session = Depends(get_db)):
+async def get_connected_documents(entity_id: str, db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
     """Get documents connected to an entity."""
     try:
         service = KnowledgeGraphService(db)
@@ -279,7 +283,7 @@ async def get_connected_documents(entity_id: str, db: Session = Depends(get_db))
 
 
 @router.get("/entity/{entity_id}/personnel", response_model=list[GraphNode])
-async def get_connected_personnel(entity_id: str, db: Session = Depends(get_db)):
+async def get_connected_personnel(entity_id: str, db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
     """Get personnel connected to an entity."""
     try:
         service = KnowledgeGraphService(db)
@@ -296,7 +300,7 @@ async def get_connected_personnel(entity_id: str, db: Session = Depends(get_db))
 # ============================================================================
 
 @router.post("/sync/document/{document_id}", response_model=SyncResult)
-async def sync_document(document_id: str, force_rebuild: bool = False, db: Session = Depends(get_db)):
+async def sync_document(document_id: str, force_rebuild: bool = False, db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
     """Synchronize a document to the graph."""
     try:
         service = KnowledgeGraphService(db)
@@ -310,7 +314,7 @@ async def sync_document(document_id: str, force_rebuild: bool = False, db: Sessi
 
 
 @router.post("/sync/all")
-async def sync_all_documents(force_rebuild: bool = False, db: Session = Depends(get_db)):
+async def sync_all_documents(force_rebuild: bool = False, db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
     """Synchronize all documents to the graph."""
     try:
         service = KnowledgeGraphService(db)
@@ -323,7 +327,7 @@ async def sync_all_documents(force_rebuild: bool = False, db: Session = Depends(
 
 
 @router.post("/rebuild")
-async def rebuild_graph(db: Session = Depends(get_db)):
+async def rebuild_graph(db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
     """Rebuild the entire graph."""
     try:
         service = KnowledgeGraphService(db)
@@ -336,7 +340,7 @@ async def rebuild_graph(db: Session = Depends(get_db)):
 
 
 @router.get("/sync/status/{document_id}", response_model=SyncStatus)
-async def get_sync_status(document_id: str, db: Session = Depends(get_db)):
+async def get_sync_status(document_id: str, db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
     """Get synchronization status for a document."""
     try:
         service = KnowledgeGraphService(db)
@@ -353,7 +357,7 @@ async def get_sync_status(document_id: str, db: Session = Depends(get_db)):
 # ============================================================================
 
 @router.post("/initialize")
-async def initialize_graph(db: Session = Depends(get_db)):
+async def initialize_graph(db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
     """Initialize graph indexes and constraints."""
     try:
         service = KnowledgeGraphService(db)
@@ -367,7 +371,7 @@ async def initialize_graph(db: Session = Depends(get_db)):
 
 
 @router.delete("/clear")
-async def clear_graph(db: Session = Depends(get_db)):
+async def clear_graph(db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
     """Clear all nodes and relationships from the graph."""
     try:
         service = KnowledgeGraphService(db)

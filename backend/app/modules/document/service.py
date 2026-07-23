@@ -13,13 +13,17 @@ from app.modules.document.schemas import (
 )
 from app.modules.document.storage import LocalStorageProvider, StorageProvider
 from app.modules.document.validators import FileValidator
-from app.modules.document.enums import ProcessingStatus
+from app.modules.document.file_detector import FileDetector
+from app.modules.document.enums import ProcessingStatus, FileCategory, ProcessingCapability
 from app.modules.document.exceptions import (
     DocumentNotFoundException,
     DuplicateFileException,
     StorageException
 )
 from app.modules.document.constants import DOCUMENTS_STORAGE_DIR
+from app.core.logging import setup_logging
+
+logger = setup_logging()
 
 
 class DocumentService:
@@ -45,9 +49,10 @@ class DocumentService:
         description: Optional[str] = None,
         tags: Optional[List[str]] = None,
         category: Optional[str] = None,
-        uploaded_by: Optional[str] = None
+        uploaded_by: Optional[str] = None,
+        upload_source: Optional[str] = 'web'
     ) -> DocumentResponse:
-        """Upload a new document.
+        """Upload a new document with enhanced file type detection.
         
         Args:
             filename: Original filename
@@ -56,22 +61,31 @@ class DocumentService:
             document_name: Display name for document
             description: Document description
             tags: Document tags
-            category: Document category
+            category: Document category (legacy)
             uploaded_by: User who uploaded the document
+            upload_source: Source of upload (web, api, etc.)
             
         Returns:
             Created document response
             
         Raises:
             FileSizeExceededException: If file size exceeds limit
-            InvalidFileTypeException: If file type is not allowed
+            InvalidFileTypeException: If file type is not allowed or is blocked
             DuplicateFileException: If document with same checksum exists
             StorageException: If storage operation fails
         """
-        # Validate file
-        sanitized_filename, extension, checksum = FileValidator.validate_file(
+        # Validate file with enhanced detection
+        sanitized_filename, extension, checksum, detected_mime_type = FileValidator.validate_file(
             filename, content, mime_type
         )
+        
+        # Detect file category
+        _, detected_extension, file_category = FileDetector.detect_file_type(
+            filename, content, mime_type
+        )
+        
+        # Determine processing capability based on file category
+        processing_capability = self._determine_processing_capability(file_category)
         
         # Generate storage path using UUID
         file_uuid = str(uuid.uuid4())
@@ -80,7 +94,7 @@ class DocumentService:
         # Save to storage
         await self.storage.save(storage_path, content)
         
-        # Create document record
+        # Create document record with new fields
         document_data = DocumentCreate(
             document_name=document_name or sanitized_filename,
             original_filename=sanitized_filename,
@@ -96,7 +110,58 @@ class DocumentService:
         )
         
         document = self.repository.create(document_data)
+        
+        # Update with enhanced metadata
+        document.file_category = file_category.value if file_category else None
+        document.detected_mime_type = detected_mime_type
+        document.original_extension = detected_extension
+        document.processing_capability = processing_capability.value
+        document.upload_source = upload_source
+        
+        self.db.commit()
+        self.db.refresh(document)
+        
+        logger.info(
+            f"Document uploaded successfully: {document.id}, "
+            f"category: {file_category}, "
+            f"capability: {processing_capability}"
+        )
+        
         return DocumentResponse.model_validate(document)
+    
+    def _determine_processing_capability(self, file_category: FileCategory) -> ProcessingCapability:
+        """Determine processing capability based on file category.
+        
+        Args:
+            file_category: Detected file category
+            
+        Returns:
+            ProcessingCapability enum value
+        """
+        # Full processing for documents, spreadsheets, presentations
+        if file_category in [FileCategory.DOCUMENT, FileCategory.SPREADSHEET, FileCategory.PRESENTATION]:
+            return ProcessingCapability.FULL
+        
+        # Partial processing for images (OCR only)
+        if file_category == FileCategory.IMAGE:
+            return ProcessingCapability.PARTIAL
+        
+        # Metadata only for engineering drawings, emails, structured data, logs
+        if file_category in [
+            FileCategory.ENGINEERING_DRAWING,
+            FileCategory.EMAIL,
+            FileCategory.STRUCTURED_DATA,
+            FileCategory.LOG_FILE,
+            FileCategory.SOURCE_CODE
+        ]:
+            return ProcessingCapability.METADATA_ONLY
+        
+        # Unsupported for archives (requires extraction)
+        if file_category == FileCategory.ARCHIVE:
+            return ProcessingCapability.UNSUPPORTED
+        
+        # Default to metadata only for unknown
+        return ProcessingCapability.METADATA_ONLY
     
     async def upload_multiple_documents(
         self,

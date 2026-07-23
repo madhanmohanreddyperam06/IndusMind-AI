@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { documentApiService, Document, DocumentFilters, DocumentUpdate } from '../services/documentApi';
+import API_CONFIG from '../config/api';
 
 interface ProcessingStatus {
   document_id: string;
@@ -102,7 +103,7 @@ function Documents() {
     setProcessingLoading(true);
     setError('');
     try {
-      const response = await fetch(`http://localhost:8000/api/v1/document-processing/process/${documentId}`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL_WITH_VERSION}/document-processing/process/${documentId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -341,19 +342,75 @@ function Documents() {
       {/* Upload Modal */}
       {showUploadModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+          <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">Upload Document</h2>
-            <input
-              type="file"
-              multiple
-              onChange={(e) => {
-                if (e.target.files) {
-                  handleUpload(Array.from(e.target.files));
-                }
-              }}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm"
-            />
-            <div className="mt-4 flex justify-end space-x-3">
+            
+            {/* Supported File Types */}
+            <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+              <h3 className="text-sm font-medium text-gray-900 mb-3">Supported File Types</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                <div>
+                  <span className="font-medium">📄 Documents:</span>
+                  <span className="text-gray-600 ml-1">PDF, DOC, DOCX, RTF, TXT, MD, ODT</span>
+                </div>
+                <div>
+                  <span className="font-medium">📊 Spreadsheets:</span>
+                  <span className="text-gray-600 ml-1">XLS, XLSX, CSV, TSV, ODS</span>
+                </div>
+                <div>
+                  <span className="font-medium">📽 Presentations:</span>
+                  <span className="text-gray-600 ml-1">PPT, PPTX, ODP</span>
+                </div>
+                <div>
+                  <span className="font-medium">🖼 Images:</span>
+                  <span className="text-gray-600 ml-1">JPG, JPEG, PNG, BMP, TIFF, WEBP, GIF, HEIC, SVG</span>
+                </div>
+                <div>
+                  <span className="font-medium">📐 Engineering:</span>
+                  <span className="text-gray-600 ml-1">DWG, DXF, VSD, VSDX, DRAWIO</span>
+                </div>
+                <div>
+                  <span className="font-medium">📧 Emails:</span>
+                  <span className="text-gray-600 ml-1">EML, MSG</span>
+                </div>
+                <div>
+                  <span className="font-medium">📦 Archives:</span>
+                  <span className="text-gray-600 ml-1">ZIP, TAR, TAR.GZ, TGZ</span>
+                </div>
+                <div>
+                  <span className="font-medium">⚙ Structured Data:</span>
+                  <span className="text-gray-600 ml-1">JSON, XML, YAML, YML</span>
+                </div>
+                <div>
+                  <span className="font-medium">📝 Logs:</span>
+                  <span className="text-gray-600 ml-1">LOG, TXT, CSV</span>
+                </div>
+                <div>
+                  <span className="font-medium">💻 Source Code:</span>
+                  <span className="text-gray-600 ml-1">PY, JAVA, JS, TS, C, CPP, CS, GO, SH, SQL</span>
+                </div>
+              </div>
+            </div>
+            
+            {/* File Input */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Select Files</label>
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
+                <input
+                  type="file"
+                  multiple
+                  onChange={(e) => {
+                    if (e.target.files) {
+                      handleUpload(Array.from(e.target.files));
+                    }
+                  }}
+                  className="w-full text-sm text-gray-600"
+                />
+                <p className="text-xs text-gray-500 mt-2">Maximum file size: 100 MB</p>
+              </div>
+            </div>
+            
+            <div className="flex justify-end space-x-3">
               <button
                 onClick={() => setShowUploadModal(false)}
                 className="px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50"

@@ -2,7 +2,9 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.config.database import get_db
+from app.api.dependencies import get_current_active_user
 from app.modules.knowledge_extraction.service import KnowledgeExtractionService
+from app.models.user import User
 from app.modules.knowledge_extraction.schemas import (
     ExtractEntitiesRequest,
     ExtractRelationshipsRequest,
@@ -21,14 +23,15 @@ from app.core.logging import setup_logging
 
 logger = setup_logging()
 
-router = APIRouter(prefix="/api/v1/knowledge-extraction", tags=["knowledge-extraction"])
+router = APIRouter()
 
 
 @router.post("/entities/{document_id}", response_model=EntityExtractionResult)
 async def extract_entities(
     document_id: str,
     request: ExtractEntitiesRequest,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
 ):
     """Extract entities from a document.
     
@@ -61,7 +64,8 @@ async def extract_entities(
 async def extract_relationships(
     document_id: str,
     request: ExtractRelationshipsRequest,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
 ):
     """Extract relationships from a document.
     
@@ -94,7 +98,8 @@ async def extract_relationships(
 async def process_document(
     document_id: str,
     request: ProcessKnowledgeExtractionRequest,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
 ):
     """Run full knowledge extraction pipeline.
     
@@ -125,7 +130,8 @@ async def process_document(
 @router.get("/entities/{document_id}")
 async def get_entities(
     document_id: str,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
 ):
     """Get all entities for a document.
     
@@ -154,7 +160,8 @@ async def get_entities(
 @router.get("/relationships/{document_id}")
 async def get_relationships(
     document_id: str,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
 ):
     """Get all relationships for a document.
     
@@ -183,7 +190,8 @@ async def get_relationships(
 @router.get("/statistics/{document_id}", response_model=KnowledgeExtractionStatistics)
 async def get_statistics(
     document_id: str,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
 ):
     """Get extraction statistics for a document.
     
@@ -208,7 +216,8 @@ async def get_statistics(
 @router.get("/status/{document_id}", response_model=ExtractionStatusResponse)
 async def get_extraction_status(
     document_id: str,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
 ):
     """Get extraction status for a document.
     
@@ -233,7 +242,8 @@ async def get_extraction_status(
 @router.delete("/{document_id}")
 async def delete_extraction(
     document_id: str,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
 ):
     """Delete all extraction data for a document.
     

@@ -3,9 +3,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from app.config.settings import settings
 from app.core.logging import setup_logging
+from app.core.exceptions import register_exception_handlers
 from app.middleware.cors import add_cors_middleware
 from app.middleware.logging import log_requests
-from app.api.v1 import health, root, auth
+from app.api.v1 import health, root, auth, roles, permissions, user_roles, role_permissions, admin, users, profile, password_reset, audit_logs, monitoring, notifications
 from app.modules.document.routes import router as document_router
 from app.modules.document_processing.routes import router as document_processing_router
 from app.modules.knowledge_extraction.routes import router as knowledge_extraction_router
@@ -87,17 +88,31 @@ def create_app() -> FastAPI:
     # Add logging middleware
     app.middleware("http")(log_requests)
     
-    # Include routers
+    # Register exception handlers
+    register_exception_handlers(app)
+    
+    # Include routers with consistent prefixes and tags
     app.include_router(health.router)
     app.include_router(root.router)
-    app.include_router(auth.router, prefix="/api/v1/auth", tags=["authentication"])
-    app.include_router(document_router, prefix="/api/v1/documents", tags=["documents"])
-    app.include_router(document_processing_router, prefix="/api/v1/document-processing", tags=["document-processing"])
-    app.include_router(knowledge_extraction_router, tags=["knowledge-extraction"])
-    app.include_router(knowledge_graph_router, tags=["knowledge-graph"])
-    app.include_router(embedding_pipeline_router, tags=["embeddings"])
-    app.include_router(hybrid_retrieval_router, tags=["hybrid-retrieval"])
-    app.include_router(rag_engine_router, prefix="/api/v1", tags=["rag-engine"])
+    app.include_router(auth.router, prefix="/api/v1/auth", tags=["Authentication"])
+    app.include_router(password_reset.router, prefix="/api/v1/auth", tags=["Authentication"])
+    app.include_router(profile.router, prefix="/api/v1/profile", tags=["Profile"])
+    app.include_router(roles.router, prefix="/api/v1/roles", tags=["Roles"])
+    app.include_router(permissions.router, prefix="/api/v1/permissions", tags=["Permissions"])
+    app.include_router(user_roles.router, prefix="/api/v1/user-roles", tags=["User Roles"])
+    app.include_router(role_permissions.router, prefix="/api/v1/role-permissions", tags=["Role Permissions"])
+    app.include_router(admin.router, prefix="/api/v1/admin", tags=["Admin"])
+    app.include_router(users.router, prefix="/api/v1/users", tags=["Users"])
+    app.include_router(audit_logs.router, prefix="/api/v1/audit-logs", tags=["Audit Logs"])
+    app.include_router(monitoring.router, prefix="/api/v1/monitoring", tags=["Monitoring"])
+    app.include_router(notifications.router, prefix="/api/v1/notifications", tags=["Notifications"])
+    app.include_router(document_router, prefix="/api/v1/documents", tags=["Documents"])
+    app.include_router(document_processing_router, prefix="/api/v1/document-processing", tags=["Document Processing"])
+    app.include_router(knowledge_extraction_router, prefix="/api/v1/knowledge-extraction", tags=["Knowledge Extraction"])
+    app.include_router(knowledge_graph_router, prefix="/api/v1/graph", tags=["Knowledge Graph"])
+    app.include_router(embedding_pipeline_router, prefix="/api/v1/embeddings", tags=["Embeddings"])
+    app.include_router(hybrid_retrieval_router, prefix="/api/v1/retrieval", tags=["Hybrid Retrieval"])
+    app.include_router(rag_engine_router, prefix="/api/v1/rag", tags=["RAG Engine"])
     
     return app
 

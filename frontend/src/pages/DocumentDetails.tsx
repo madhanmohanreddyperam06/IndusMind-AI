@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ProcessingTimeline } from '../components/documents/ProcessingTimeline';
 import { documentService } from '../services';
 import type { ProcessingTimeline as ProcessingTimelineType } from '../types/documents';
+import API_CONFIG from '../config/api';
 
 interface Entity {
   entity_id: string;
@@ -66,21 +67,21 @@ function DocumentDetails() {
     setError('');
     try {
       // Load entities
-      const entitiesResponse = await fetch(`http://localhost:8000/api/v1/knowledge-extraction/entities/${documentId}`);
+      const entitiesResponse = await fetch(`${API_CONFIG.BASE_URL_WITH_VERSION}/knowledge-extraction/entities/${documentId}`);
       if (entitiesResponse.ok) {
         const entitiesData = await entitiesResponse.json();
         setEntities(entitiesData.entities || []);
       }
 
       // Load relationships
-      const relationshipsResponse = await fetch(`http://localhost:8000/api/v1/knowledge-extraction/relationships/${documentId}`);
+      const relationshipsResponse = await fetch(`${API_CONFIG.BASE_URL_WITH_VERSION}/knowledge-extraction/relationships/${documentId}`);
       if (relationshipsResponse.ok) {
         const relationshipsData = await relationshipsResponse.json();
         setRelationships(relationshipsData.relationships || []);
       }
 
       // Load statistics
-      const statsResponse = await fetch(`http://localhost:8000/api/v1/knowledge-extraction/statistics/${documentId}`);
+      const statsResponse = await fetch(`${API_CONFIG.BASE_URL_WITH_VERSION}/knowledge-extraction/statistics/${documentId}`);
       if (statsResponse.ok) {
         const statsData = await statsResponse.json();
         setStatistics(statsData);
@@ -106,7 +107,7 @@ function DocumentDetails() {
     setExtracting(true);
     setError('');
     try {
-      const response = await fetch(`http://localhost:8000/api/v1/knowledge-extraction/process/${documentId}`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL_WITH_VERSION}/knowledge-extraction/process/${documentId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

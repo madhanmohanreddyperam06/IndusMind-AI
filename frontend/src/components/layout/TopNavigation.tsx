@@ -35,22 +35,22 @@ export function TopNavigation() {
   }, []);
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-30 h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700">
+    <header className="fixed top-0 left-0 right-0 z-30 h-16 bg-gray-900 text-gray-100 border-b border-gray-800">
       <div className="max-w-[1400px] mx-auto px-4 md:px-6 h-full flex items-center justify-between">
         {/* Left Section */}
         <div className="flex items-center gap-4">
           {/* Mobile Menu Button */}
           <button
             onClick={toggleSidebar}
-            className="md:hidden p-2 rounded-lg hover:bg-slate-100 transition-colors"
+            className="md:hidden p-2 rounded-lg hover:bg-gray-800 transition-colors"
             aria-label="Toggle menu"
           >
-            <Menu className="h-6 w-6 text-slate-600" />
+            <Menu className="h-6 w-6 text-gray-300" />
           </button>
 
           {/* Logo */}
           <div className="flex items-center gap-2">
-            <h1 className="text-xl md:text-xl font-semibold text-slate-900 tracking-tight">🧠 IndusMind AI</h1>
+            <h1 className="text-xl md:text-xl font-semibold text-white tracking-tight">🧠 IndusMind AI</h1>
           </div>
         </div>
 
@@ -69,8 +69,8 @@ export function TopNavigation() {
                   className={cn(
                     'flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
                     isActive
-                      ? 'bg-blue-50 text-blue-600'
-                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                      ? 'bg-blue-600 text-white'
+                      : 'text-gray-300 hover:bg-gray-800 hover:text-white'
                   )}
                   aria-label={item.name}
                 >
@@ -93,16 +93,16 @@ export function TopNavigation() {
 
             {/* Profile Dropdown */}
             {showProfileDropdown && (
-              <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-slate-200 py-2 z-50">
+              <div className="absolute right-0 mt-2 w-64 bg-gray-800 rounded-lg shadow-lg border border-gray-700 py-2 z-50">
                 {/* Profile Header */}
-                <div className="px-4 py-3 border-b border-slate-200">
+                <div className="px-4 py-3 border-b border-gray-700">
                   <div className="flex items-center gap-3">
                     <div className="h-10 w-10 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm font-medium">
                       {user?.full_name?.charAt(0) || 'U'}
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-slate-900">{user?.full_name || 'User'}</p>
-                      <p className="text-xs text-slate-500">{user?.email || 'user@example.com'}</p>
+                      <p className="text-sm font-medium text-white">{user?.full_name || 'User'}</p>
+                      <p className="text-xs text-gray-400">{user?.email || 'user@example.com'}</p>
                     </div>
                   </div>
                 </div>
@@ -113,7 +113,7 @@ export function TopNavigation() {
                     navigate('/dashboard/profile');
                     setShowProfileDropdown(false);
                   }}
-                  className="w-full flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 transition-colors"
+                  className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 transition-colors"
                 >
                   <User className="h-4 w-4" />
                   <span>Profile</span>
@@ -125,13 +125,13 @@ export function TopNavigation() {
                     navigate('/dashboard/settings');
                     setShowProfileDropdown(false);
                   }}
-                  className="w-full flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 transition-colors"
+                  className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 transition-colors"
                 >
                   <Settings className="h-4 w-4" />
                   <span>Settings</span>
                 </button>
 
-                <div className="border-t border-slate-200 my-1"></div>
+                <div className="border-t border-gray-700 my-1"></div>
 
                 {/* Logout */}
                 <button
@@ -139,7 +139,7 @@ export function TopNavigation() {
                     logout();
                     setShowProfileDropdown(false);
                   }}
-                  className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                  className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-400 hover:bg-red-900/20 transition-colors"
                 >
                   <LogOut className="h-4 w-4" />
                   <span>Logout</span>

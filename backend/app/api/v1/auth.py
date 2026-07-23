@@ -5,6 +5,9 @@ from app.config.database import get_db
 from app.schemas.auth import UserCreate, UserResponse, Token
 from app.repositories.user import create_user, get_user_by_email, authenticate_user
 from app.services.auth import create_access_token
+from app.models.role import Role
+from app.models.user_role import UserRole
+from datetime import datetime
 
 router = APIRouter()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
@@ -12,7 +15,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 def register(user: UserCreate, db: Session = Depends(get_db)):
-    """Register a new user."""
+    """Register a new user with default 'user' role."""
     # Check if user already exists
     db_user = get_user_by_email(db, email=user.email)
     if db_user:
@@ -22,7 +25,22 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
         )
     
     # Create new user
-    return create_user(db=db, user=user)
+    new_user = create_user(db=db, user=user)
+    
+    # Assign default 'user' role
+    user_role = db.query(Role).filter(Role.name == "user").first()
+    if user_role:
+        user_role_assignment = UserRole(
+            user_id=new_user.id,
+            role_id=user_role.id,
+            assigned_at=datetime.utcnow(),
+            assigned_by=new_user.id
+        )
+        db.add(user_role_assignment)
+        db.commit()
+        db.refresh(new_user)
+    
+    return new_user
 
 
 @router.post("/login", response_model=Token)

@@ -2,7 +2,9 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.config.database import get_db
+from app.api.dependencies import get_current_active_user
 from app.modules.document_processing.service import DocumentProcessingService
+from app.models.user import User
 from app.modules.document_processing.schemas import (
     ProcessDocumentRequest,
     ProcessAllRequest,
@@ -26,7 +28,8 @@ def get_document_processing_service(db: Session = Depends(get_db)) -> DocumentPr
 async def process_document(
     document_id: str,
     request: ProcessDocumentRequest,
-    service: DocumentProcessingService = Depends(get_document_processing_service)
+    service: DocumentProcessingService = Depends(get_document_processing_service),
+    current_user: User = Depends(get_current_active_user)
 ):
     """Process a document.
     
@@ -57,7 +60,8 @@ async def process_document(
 @router.post("/process-all")
 async def process_all(
     request: ProcessAllRequest,
-    service: DocumentProcessingService = Depends(get_document_processing_service)
+    service: DocumentProcessingService = Depends(get_document_processing_service),
+    current_user: User = Depends(get_current_active_user)
 ):
     """Process all uploaded documents.
     
@@ -81,7 +85,8 @@ async def process_all(
 @router.get("/status/{document_id}", response_model=ProcessingStatusResponse)
 def get_processing_status(
     document_id: str,
-    service: DocumentProcessingService = Depends(get_document_processing_service)
+    service: DocumentProcessingService = Depends(get_document_processing_service),
+    current_user: User = Depends(get_current_active_user)
 ):
     """Get processing status for a document.
     
@@ -105,7 +110,8 @@ def get_processing_status(
 @router.get("/result/{document_id}", response_model=ProcessedDocumentResponse)
 def get_processed_document(
     document_id: str,
-    service: DocumentProcessingService = Depends(get_document_processing_service)
+    service: DocumentProcessingService = Depends(get_document_processing_service),
+    current_user: User = Depends(get_current_active_user)
 ):
     """Get processed document result.
     
@@ -137,7 +143,8 @@ def get_processed_document(
 @router.get("/statistics/{document_id}", response_model=DocumentStatisticsResponse)
 def get_document_statistics(
     document_id: str,
-    service: DocumentProcessingService = Depends(get_document_processing_service)
+    service: DocumentProcessingService = Depends(get_document_processing_service),
+    current_user: User = Depends(get_current_active_user)
 ):
     """Get document statistics.
     

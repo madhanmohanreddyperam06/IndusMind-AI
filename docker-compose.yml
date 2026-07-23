@@ -11,7 +11,7 @@ services:
       MYSQL_USER: indusmind
       MYSQL_PASSWORD: Madhanreddy@123
     ports:
-      - "3306:3306"
+      - "3307:3306"
     volumes:
       - mysql_data:/var/lib/mysql
     networks:
@@ -19,8 +19,9 @@ services:
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pMadhanreddy@123"]
       interval: 10s
-      timeout: 5s
-      retries: 5
+      timeout: 10s
+      retries: 30
+      start_period: 30s
 
   # Neo4j Graph Database
   neo4j:
@@ -39,11 +40,6 @@ services:
       - neo4j_logs:/logs
     networks:
       - indusmind-network
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:7474 || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
   # Qdrant Vector Database
   qdrant:
@@ -56,11 +52,6 @@ services:
       - qdrant_data:/qdrant/storage
     networks:
       - indusmind-network
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:6333/health || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
   # MinIO Object Storage
   minio:
@@ -77,11 +68,6 @@ services:
       - minio_data:/data
     networks:
       - indusmind-network
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:9000/minio/health/live || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
   # Backend API
   backend:
@@ -90,32 +76,28 @@ services:
       dockerfile: docker/backend.Dockerfile
     container_name: indusmind-backend
     environment:
-      MYSQL_URL: mysql+pymysql://root:Madhanreddy@123@mysql:3306/indusmind
+      MYSQL_URL: mysql+pymysql://root:[REDACTED]@123@mysql:3306/indusmind
       NEO4J_URI: bolt://neo4j:7687
       NEO4J_USER: neo4j
-      NEO4J_PASSWORD: neo4j
+      NEO4J_PASSWORD: indusmind123
       QDRANT_URL: http://qdrant:6333
       MINIO_ENDPOINT: minio:9000
       MINIO_ACCESS_KEY: minioadmin
       MINIO_SECRET_KEY: minioadmin
       HOST: 0.0.0.0
-      PORT: 8000
+      PORT: 8001
     ports:
-      - "8000:8000"
+      - "8001:8001"
     volumes:
       - ./backend:/app
       - backend_logs:/app/logs
     networks:
       - indusmind-network
     depends_on:
-      mysql:
-        condition: service_healthy
-      neo4j:
-        condition: service_healthy
-      qdrant:
-        condition: service_healthy
-      minio:
-        condition: service_healthy
+      - mysql
+      - neo4j
+      - qdrant
+      - minio
     restart: unless-stopped
 
   # Frontend
@@ -127,8 +109,10 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - ./frontend:/app
-      - /app/node_modules
+      - ./frontend/src:/app/src
+      - ./frontend/index.html:/app/index.html
+      - ./frontend/vite.config.ts:/app/vite.config.ts
+      - ./frontend/tsconfig.json:/app/tsconfig.json
     networks:
       - indusmind-network
     depends_on:

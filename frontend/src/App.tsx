@@ -1,6 +1,9 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { lazy, Suspense } from 'react'
-import { Sidebar, TopNavigation, MainWorkspace } from './components/layout'
+import { Sidebar, TopNavigation, MainWorkspace, Footer } from './components/layout'
+import PageLoader from './components/common/PageLoader'
+import ErrorPage from './components/common/ErrorPage'
+import NotFoundPage from './components/common/NotFoundPage'
 
 // Lazy load pages for code splitting
 const Landing = lazy(() => import('./pages/Landing'))
@@ -18,15 +21,6 @@ const Settings = lazy(() => import('./pages/Settings'))
 const Profile = lazy(() => import('./pages/Profile'))
 
 import { useAuthStore } from './stores'
-
-// Loading component for lazy-loaded routes
-function PageLoader() {
-  return (
-    <div className="flex items-center justify-center h-full">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
-    </div>
-  )
-}
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuthStore()
@@ -52,7 +46,7 @@ function App() {
                 <TopNavigation />
                 <MainWorkspace>
                   <ProtectedRoute>
-                    <Suspense fallback={<PageLoader />}>
+                    <Suspense fallback={<PageLoader message="Loading page..." />}>
                       <Routes>
                         <Route path="/" element={<Dashboard />} />
                         <Route path="/copilot" element={<AICopilot />} />
@@ -68,10 +62,12 @@ function App() {
                     </Suspense>
                   </ProtectedRoute>
                 </MainWorkspace>
+                <Footer />
               </>
             }
           />
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="/error" element={<ErrorPage />} />
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </Suspense>
     </BrowserRouter>
